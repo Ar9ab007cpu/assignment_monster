@@ -7,9 +7,9 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-.env")
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -32,6 +32,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -62,16 +63,31 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "click_to_assignment.wsgi.application"
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "djongo",
+#         "NAME": os.getenv("MONGO_DB_NAME", "click_assignment"),
+#         "ENFORCE_SCHEMA": False,
+#         "CLIENT": {
+#             "host": os.getenv("MONGO_URI", "mongodb://localhost:27017"),
+#         },
+#     }
+# }
+
+
 DATABASES = {
     "default": {
         "ENGINE": "djongo",
         "NAME": os.getenv("MONGO_DB_NAME", "click_assignment"),
         "ENFORCE_SCHEMA": False,
         "CLIENT": {
-            "host": os.getenv("MONGO_URI", "mongodb://localhost:27017"),
+            "host": os.getenv("MONGO_URI"),
         },
     }
 }
+
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 AUTH_USER_MODEL = "accounts.User"
 
