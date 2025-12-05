@@ -1,0 +1,76 @@
+{% extends "common/base.html" %}
+
+{% block page_title %}All Projects{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-3">
+    <div>
+        <h2 class="mb-1">All Projects</h2>
+        <p class="text-muted mb-0">Track every submission and the status of generated content.</p>
+    </div>
+    <form method="get" class="row g-2 align-items-end mt-3 mt-md-0">
+        <div class="col-12 col-lg-4">
+            <label class="form-label small mb-1">Filter</label>
+            <div class="btn-group w-100">
+                <a class="btn btn-outline-primary {% if filter == 'all' %}active{% endif %}" href="?filter=all&start={{ start_date|date:'Y-m-d' }}&end={{ end_date|date:'Y-m-d' }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}">All</a>
+                <a class="btn btn-outline-primary {% if filter == 'pending' %}active{% endif %}" href="?filter=pending&start={{ start_date|date:'Y-m-d' }}&end={{ end_date|date:'Y-m-d' }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}">Pending</a>
+                <a class="btn btn-outline-primary {% if filter == 'amount' %}active{% endif %}" href="?filter=amount&start={{ start_date|date:'Y-m-d' }}&end={{ end_date|date:'Y-m-d' }}{% if search_query %}&q={{ search_query|urlencode }}{% endif %}">Top Amount</a>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small mb-1">From</label>
+            <input type="date" name="start" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small mb-1">To</label>
+            <input type="date" name="end" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+        </div>
+        <div class="col-12 col-md-2 d-grid">
+            <label class="form-label small mb-1">&nbsp;</label>
+            <input type="hidden" name="filter" value="{{ filter }}">
+            <input type="hidden" name="q" value="{{ search_query }}">
+            <button class="btn btn-outline-primary" type="submit">Apply</button>
+        </div>
+    </form>
+</div>
+
+{% include "common/components/cards_stats.html" with cards=cards %}
+
+<div class="mb-2">
+    <form method="get" class="row g-2 align-items-end justify-content-center">
+        <input type="hidden" name="filter" value="{{ filter }}">
+        <input type="hidden" name="start" value="{{ start_date|date:'Y-m-d' }}">
+        <input type="hidden" name="end" value="{{ end_date|date:'Y-m-d' }}">
+        <div class="col-12 col-md-6 col-lg-4">
+            <label class="form-label small mb-1">Search</label>
+            <input type="search" name="q" class="form-control" placeholder="Search..." value="{{ search_query }}">
+        </div>
+        <div class="col-12 col-md-auto">
+            <label class="form-label small mb-1">&nbsp;</label>
+            <button class="btn btn-primary w-100" type="submit">Search</button>
+        </div>
+    </form>
+</div>
+{% include "common/components/tables.html" with table=table %}
+
+{% if page_obj %}
+<nav aria-label="All projects pagination" class="mt-3">
+    <ul class="pagination pagination-sm mb-0">
+        <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+            <a class="page-link" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}&{{ base_query }}{% else %}#{% endif %}">Previous</a>
+        </li>
+        {% for num in page_obj.paginator.page_range %}
+            <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                <a class="page-link" href="?page={{ num }}&{{ base_query }}">{{ num }}</a>
+            </li>
+        {% endfor %}
+        <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+            <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}&{{ base_query }}{% else %}#{% endif %}">Next</a>
+        </li>
+    </ul>
+    <div class="text-muted small mt-2">
+        Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ paginator.count }}
+    </div>
+</nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "common/base.html" %}
+
+{% block page_title %}Raise Ticket{% endblock %}
+
+{% block content %}
+<div class="col-lg-8">
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h1 class="h4 mb-3">Raise Ticket</h1>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Subject</label>
+                    {{ form.subject }}
+                    {% if form.subject.errors %}
+                        <div class="text-danger small">{{ form.subject.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    {{ form.description }}
+                    {% if form.description.errors %}
+                        <div class="text-danger small">{{ form.description.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Category</label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <div class="text-danger small">{{ form.category.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+                <div id="deadline-fields">
+                    <div class="mb-3">
+                        <label class="form-label">Related Job (for deadline changes)</label>
+                        <input type="search" id="job-search" class="form-control mb-2" placeholder="Search by Job ID" autocomplete="off">
+                        {{ form.job }}
+                        {% if form.job.errors %}
+                            <div class="text-danger small">{{ form.job.errors|join:", " }}</div>
+                        {% endif %}
+                        {% if form.job.help_text %}
+                            <div class="form-text">{{ form.job.help_text }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Requested Expected Deadline</label>
+                            {{ form.requested_expected_deadline }}
+                            {% if form.requested_expected_deadline.errors %}
+                                <div class="text-danger small">{{ form.requested_expected_deadline.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Requested Strict Deadline</label>
+                            {{ form.requested_strict_deadline }}
+                            {% if form.requested_strict_deadline.errors %}
+                                <div class="text-danger small">{{ form.requested_strict_deadline.errors|join:", " }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% if form.non_field_errors %}
+                    <div class="text-danger small mb-3">
+                        {{ form.non_field_errors|join:", " }}
+                    </div>
+                {% endif %}
+                <div class="d-flex justify-content-end gap-2">
+                    <a class="btn btn-outline-secondary" href="{% url 'tickets:my_tickets' %}">Cancel</a>
+                    <button class="btn btn-primary" type="submit">Submit Ticket</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const category = document.getElementById("id_category");
+    const deadlineFields = document.getElementById("deadline-fields");
+    const jobSelect = document.getElementById("id_job");
+    const jobSearch = document.getElementById("job-search");
+
+    const toggleDeadline = () => {
+        const show = category && category.value === "deadline_change";
+        if (deadlineFields) {
+            deadlineFields.style.display = show ? "" : "none";
+        }
+    };
+    const filterJobs = () => {
+        if (!jobSelect || !jobSearch) return;
+        const term = jobSearch.value.toLowerCase();
+        Array.from(jobSelect.options).forEach(opt => {
+            const text = opt.text.toLowerCase();
+            opt.hidden = term && !text.includes(term);
+        });
+    };
+    if (jobSearch) {
+        jobSearch.addEventListener("input", filterJobs);
+    }
+
+    if (category) {
+        category.addEventListener("change", toggleDeadline);
+        toggleDeadline();
+        filterJobs();
+    }
+});
+</script>
+{% endblock %}

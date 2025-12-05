@@ -1,0 +1,149 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+
+{% block page_title %}Activity Logs{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h2 class="mb-2">Activity Logs</h2>
+        <form method="get" class="row g-2">
+            <div class="col-md-3">
+                <label class="form-label">From</label>
+                <input type="datetime-local" name="start" value="{{ filters.start }}" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">To</label>
+                <input type="datetime-local" name="end" value="{{ filters.end }}" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">User</label>
+                <select name="user" class="form-select">
+                    <option value="">All</option>
+                    {% for u in users %}
+                        <option value="{{ u.id }}" {% if filters.user|default_if_none:''|stringformat:"s" == u.id|stringformat:"s" %}selected{% endif %}>{{ u.get_full_name|default:u.email }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Action</label>
+                <select name="action" class="form-select">
+                    <option value="">All</option>
+                    {% for at in action_types %}
+                        <option value="{{ at }}" {% if filters.action == at %}selected{% endif %}>{{ at }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Search</label>
+                <input type="text" name="q" value="{{ filters.q }}" class="form-control" placeholder="Path, UA, referrer">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Duration unit</label>
+                <select class="form-select" id="durationUnit">
+                    <option value="ms" selected>ms</option>
+                    <option value="s">sec</option>
+                    <option value="m">min</option>
+                    <option value="h">hr</option>
+                </select>
+            </div>
+            <div class="col-12 d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary" type="submit">Apply</button>
+                <a class="btn btn-outline-secondary" href="{% url 'superadmin:activity_logs' %}">Reset</a>
+                <a class="btn btn-outline-success" href="?export=csv">Export CSV</a>
+                <a class="btn btn-outline-danger" href="?archive=1">Archive (& delete) logs older than 30 days</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body table-responsive">
+        <div class="d-flex justify-content-between">
+            <div class="text-muted small">Total logs: {{ total_logs }} | Avg duration: {{ avg_duration|floatformat:2 }} ms</div>
+        </div>
+        <table class="table table-sm align-middle mt-2">
+            <thead>
+                <tr>
+                    <th>When</th>
+                    <th>User</th>
+                    <th>Path</th>
+                    <th>Method</th>
+                    <th>Status</th>
+                    <th>IP</th>
+                    <th>Browser</th>
+                    <th>Duration</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if logs %}
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.created_at|date:"d M Y, h:i A" }}</td>
+                        <td>
+                            {% if log.user %}
+                                {{ log.user.get_full_name|default:log.user.email|default:"Anonymous" }}
+                            {% else %}
+                                Anonymous
+                            {% endif %}
+                        </td>
+                        <td>{{ log.path }}</td>
+                        <td>{{ log.method }}</td>
+                        <td><span class="badge {% if log.status_code < 400 %}bg-success{% elif log.status_code < 500 %}bg-warning text-dark{% else %}bg-danger{% endif %}">{{ log.status_code }}</span></td>
+                        <td>{{ log.ip_address|default:"-" }}</td>
+                        <td>{{ log.user_agent|browser_name }}</td>
+                        <td class="duration-cell" data-duration-ms="{{ log.duration_ms|default:0 }}">{{ log.duration_ms|floatformat:2 }} ms</td>
+                        <td>{{ log.action_type|default:"request" }}</td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="9" class="text-center text-muted">No logs found.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+        {% if logs_paginator and logs_paginator.num_pages > 1 %}
+        <nav>
+            <ul class="pagination pagination-sm">
+                <li class="page-item {% if not logs_page_obj.has_previous %}disabled{% endif %}">
+                    <a class="page-link" href="{% if logs_page_obj.has_previous %}?page={{ logs_page_obj.previous_page_number }}{% else %}#{% endif %}">Prev</a>
+                </li>
+                {% for num in logs_page_window %}
+                    <li class="page-item {% if logs_page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                <li class="page-item {% if not logs_page_obj.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{% if logs_page_obj.has_next %}?page={{ logs_page_obj.next_page_number }}{% else %}#{% endif %}">Next</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+<script>
+(function() {
+    const unitSelect = document.getElementById('durationUnit');
+    if (!unitSelect) return;
+    const cells = Array.from(document.querySelectorAll('.duration-cell'));
+    const format = (ms, unit) => {
+        const val = parseFloat(ms) || 0;
+        switch (unit) {
+            case 's': return (val / 1000).toFixed(2) + ' s';
+            case 'm': return (val / 60000).toFixed(2) + ' min';
+            case 'h': return (val / 3600000).toFixed(2) + ' hr';
+            default: return val.toFixed(2) + ' ms';
+        }
+    };
+    const render = () => {
+        const unit = unitSelect.value;
+        cells.forEach(cell => {
+            const ms = cell.dataset.durationMs || 0;
+            cell.textContent = format(ms, unit);
+        });
+    };
+    unitSelect.addEventListener('change', render);
+    render();
+})();
+</script>
+{% endblock %}

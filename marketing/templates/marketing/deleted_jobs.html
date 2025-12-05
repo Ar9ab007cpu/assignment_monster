@@ -1,0 +1,87 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+
+{% block page_title %}Deleted Jobs{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+    <div>
+        <h2 class="mb-0">Deleted Jobs</h2>
+        <p class="text-muted mb-0">Jobs removed by you or Super Admin with notes.</p>
+    </div>
+    <form method="get" class="row g-2 align-items-end mt-3 mt-md-0">
+        <div class="col-12 col-md-4">
+            <label class="form-label small mb-1">Search</label>
+            <input type="search" class="form-control" placeholder="Search..." name="q" value="{{ search_query }}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small mb-1">From</label>
+            <input type="date" name="start" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small mb-1">To</label>
+            <input type="date" name="end" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+        </div>
+        <div class="col-12 col-md-2 d-grid">
+            <label class="form-label small mb-1">&nbsp;</label>
+            <button class="btn btn-outline-primary" type="submit">Apply</button>
+        </div>
+    </form>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Deleted On</th>
+                    <th>Job ID</th>
+                    <th>System ID</th>
+                    <th>Amount</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                    <tr>
+                        <td>{{ job.deleted_at|date:"d M Y H:i" }}</td>
+                        <td>{{ job.job_id_customer }}</td>
+                        <td>{{ job.system_id }}</td>
+                        <td>{{ job.amount_inr|currency }}</td>
+                        <td>{{ job.deletion_notes|default:"-" }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No deleted jobs.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if paginator and paginator.num_pages > 1 %}
+        <nav aria-label="Deleted jobs pagination">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                    {% if page_obj.has_previous %}
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ base_query }}">Prev</a>
+                    {% else %}
+                        <span class="page-link">Prev</span>
+                    {% endif %}
+                </li>
+                {% for num in paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}&{{ base_query }}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                    {% if page_obj.has_next %}
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ base_query }}">Next</a>
+                    {% else %}
+                        <span class="page-link">Next</span>
+                    {% endif %}
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

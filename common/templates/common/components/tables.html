@@ -1,0 +1,32 @@
+{% if table %}
+<div class="card shadow-sm">
+    <div class="card-body table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    {% for header in table.headers %}
+                        <th scope="col">{{ header }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% if table.rows %}
+                    {% for row in table.rows %}
+                        <tr>
+                            {% for cell in row %}
+                                <td>{{ cell|safe }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="{{ table.headers|length }}" class="text-center text-muted">
+                            {{ table.empty_message|default:"No records found." }}
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}

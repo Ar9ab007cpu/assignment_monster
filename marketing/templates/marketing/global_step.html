@@ -1,0 +1,342 @@
+{% extends "common/base.html" %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+{% if step_key == "ai_report" or step_key == "plag_report" %}
+<div class="card shadow-sm">
+    <div class="card-body text-center">
+        <h4 class="mb-2">Coming Soon</h4>
+        <p class="text-muted mb-0">This section will be available shortly.</p>
+    </div>
+</div>
+{% else %}
+    {% if step_key == "content" %}
+    <div class="container-fluid px-0 px-lg-3 mb-2">
+        <div class="alert alert-info shadow-sm mb-0" role="alert">
+            Cost: 1 gem per 200 words generated from your breakdown.
+        </div>
+    </div>
+    {% endif %}
+    <div class="card shadow-sm mb-3">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h4 class="mb-0">{{ title }}</h4>
+                {% include "common/components/gems_badge.html" with balance=gems_balance %}
+            </div>
+            <form method="post" enctype="multipart/form-data" class="generation-form">
+                {% csrf_token %}
+                {% if step_key == "referencing" %}
+                <div class="mb-3">
+                    <label class="form-label">Content (required)</label>
+                    <textarea class="form-control" name="content_input" rows="6" placeholder="Paste the exact content that needs in-text citations. We will keep your wording." required>{{ reference_content }}</textarea>
+                    <div class="form-text">We will only add citations to what you provide here.</div>
+                </div>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Referencing style (required)</label>
+                        {% with reference_style|default:"APA 7" as style_choice %}
+                        <select class="form-select" name="reference_style" required>
+                            <option value="APA 7" {% if style_choice == "APA 7" %}selected{% endif %}>APA 7</option>
+                            <option value="APA 6" {% if style_choice == "APA 6" %}selected{% endif %}>APA 6</option>
+                            <option value="APA" {% if style_choice == "APA" %}selected{% endif %}>APA</option>
+                            <option value="Harvard" {% if style_choice == "Harvard" %}selected{% endif %}>Harvard</option>
+                            <option value="MLA 9" {% if style_choice == "MLA 9" %}selected{% endif %}>MLA 9</option>
+                            <option value="Chicago" {% if style_choice == "Chicago" %}selected{% endif %}>Chicago</option>
+                            <option value="IEEE" {% if style_choice == "IEEE" %}selected{% endif %}>IEEE</option>
+                            <option value="Vancouver" {% if style_choice == "Vancouver" %}selected{% endif %}>Vancouver</option>
+                        </select>
+                        {% endwith %}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Number of references (required)</label>
+                        <input type="number" class="form-control" name="reference_count" min="1" max="30" placeholder="e.g., 6" value="{{ reference_count }}" required>
+                        <div class="form-text">We will include exactly this many sources and match citations to them.</div>
+                    </div>
+                </div>
+                <div class="mb-3 mt-3">
+                    <label class="form-label">Additional notes (optional)</label>
+                    <textarea class="form-control" name="instruction" rows="2" placeholder="Any focus areas or source preferences?">{{ request.POST.instruction }}</textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Coupon code (optional)</label>
+                    <input type="text" class="form-control" name="coupon_code" placeholder="Enter coupon code if any">
+                </div>
+                {% else %}
+                <div class="mb-3">
+                    <label class="form-label">Instruction (required)</label>
+                    <textarea class="form-control" name="instruction" rows="4" placeholder="Paste your word breakdown structure here (e.g., Introduction - 150 words, Body - 400 words...)."></textarea>
+                    <div class="form-text">Include the word breakdown directly in this instruction. We will honor the counts per section.</div>
+                </div>
+                {% if step_key == "content" %}
+                <div class="mb-3">
+                    <label class="form-label">Coupon code (optional)</label>
+                    <input type="text" class="form-control" name="coupon_code" placeholder="Enter coupon code if any">
+                </div>
+                {% endif %}
+                {% endif %}
+                <button class="btn btn-primary">Generate</button>
+                {% if next_url %}<a class="btn btn-outline-primary ms-2" href="{{ next_url }}">Go to next</a>{% endif %}
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h5 class="card-title mb-0">Output</h5>
+                {% if output %}
+                    {% include "common/components/copy_button.html" with target="#stepOutput" label="Copy Output" %}
+                {% endif %}
+            </div>
+        {% if output %}
+            <pre id="stepOutput" class="mb-0" style="max-height: 320px; overflow-y: auto;">{{ output }}</pre>
+        {% else %}
+            <p class="text-muted mb-0">No content generated yet.</p>
+        {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+{% if content_history_enabled %}
+<div class="card shadow-sm mt-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Recent Content History</h6>
+        </div>
+        {% if history_page %}
+            <div class="table-responsive">
+                <table class="table table-dark table-striped table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 25%;">Date &amp; Time</th>
+                            <th scope="col">Structure Preview</th>
+                            <th scope="col" class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in history_page %}
+                        <tr>
+                            <td class="fw-semibold">{{ item.created_at|date:"d M Y, h:i A" }}</td>
+                            <td class="text-muted">{{ item.structure|truncatechars:120 }}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-light content-history-link"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#contentHistoryModal"
+                                        data-created="{{ item.created_at|date:'d M Y, h:i A' }}"
+                                        data-structure="{{ item.structure|escape }}"
+                                        data-result="{{ item.result|escape }}">
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <div class="small text-muted">Page {{ history_page_number }} of {{ history_total_pages }}</div>
+                <nav aria-label="Content history pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item {% if history_page_number <= 1 %}disabled{% endif %}">
+                            {% if history_page_number <= 1 %}
+                            <a class="page-link" href="#" tabindex="-1">Prev</a>
+                            {% else %}
+                            <a class="page-link" href="?hist_page={{ history_page_number|add:'-1' }}" tabindex="-1">Prev</a>
+                            {% endif %}
+                        </li>
+                        {% for p in history_page_numbers %}
+                        <li class="page-item {% if p == history_page_number %}active{% endif %}">
+                            <a class="page-link" href="?hist_page={{ p }}">{{ p }}</a>
+                        </li>
+                        {% endfor %}
+                        <li class="page-item {% if history_page_number >= history_total_pages %}disabled{% endif %}">
+                            {% if history_page_number >= history_total_pages %}
+                            <a class="page-link" href="#" tabindex="-1">Next</a>
+                            {% else %}
+                            <a class="page-link" href="?hist_page={{ history_page_number|add:'1' }}" tabindex="-1">Next</a>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        {% else %}
+            <div class="text-muted small">No content history yet.</div>
+        {% endif %}
+    </div>
+</div>
+<div class="modal fade history-modal" id="contentHistoryModal" tabindex="-1" aria-labelledby="contentHistoryLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="contentHistoryLabel">Content Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 small text-muted">Generated on <span id="contentHistoryCreated"></span></div>
+        <div class="mb-3">
+            <h6>Structure Input</h6>
+            <pre class="analysis-output p-2 small" id="contentHistoryStructure"></pre>
+        </div>
+        <div>
+            <h6>Generated Content</h6>
+            <pre class="analysis-output p-2 small" id="contentHistoryResult"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if referencing_history_enabled %}
+<div class="card shadow-sm mt-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Recent Referencing History</h6>
+        </div>
+        {% if referencing_history_page %}
+            <div class="table-responsive">
+                <table class="table table-dark table-striped table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 25%;">Date &amp; Time</th>
+                            <th scope="col">Cited Content Preview</th>
+                            <th scope="col" style="width: 12%;" class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in referencing_history_page %}
+                        <tr>
+                            <td class="fw-semibold">{{ item.created_at|date:"d M Y, h:i A" }}</td>
+                            <td class="text-muted">{{ item.result|truncatechars:120 }}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-light referencing-history-link"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#referencingHistoryModal"
+                                        data-created="{{ item.created_at|date:'d M Y, h:i A' }}"
+                                        data-content="{{ item.content_input|escape }}"
+                                        data-result="{{ item.result|escape }}"
+                                        data-style="{{ item.reference_style }}"
+                                        data-count="{{ item.reference_count }}">
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <div class="small text-muted">Page {{ referencing_history_page_number }} of {{ referencing_total_pages }}</div>
+                <nav aria-label="Referencing history pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item {% if referencing_history_page_number <= 1 %}disabled{% endif %}">
+                            {% if referencing_history_page_number <= 1 %}
+                            <a class="page-link" href="#" tabindex="-1">Prev</a>
+                            {% else %}
+                            <a class="page-link" href="?hist_page={{ referencing_history_page_number|add:'-1' }}" tabindex="-1">Prev</a>
+                            {% endif %}
+                        </li>
+                        {% for p in referencing_page_numbers %}
+                        <li class="page-item {% if p == referencing_history_page_number %}active{% endif %}">
+                            <a class="page-link" href="?hist_page={{ p }}">{{ p }}</a>
+                        </li>
+                        {% endfor %}
+                        <li class="page-item {% if referencing_history_page_number >= referencing_total_pages %}disabled{% endif %}">
+                            {% if referencing_history_page_number >= referencing_total_pages %}
+                            <a class="page-link" href="#" tabindex="-1">Next</a>
+                            {% else %}
+                            <a class="page-link" href="?hist_page={{ referencing_history_page_number|add:'1' }}" tabindex="-1">Next</a>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        {% else %}
+            <div class="text-muted small">No referencing history yet.</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal fade history-modal" id="referencingHistoryModal" tabindex="-1" aria-labelledby="referencingHistoryLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="referencingHistoryLabel">Referencing Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 small text-muted">Generated on <span id="referencingHistoryCreated"></span></div>
+        <div class="mb-2 small text-muted">Style: <span id="referencingHistoryStyle"></span> | References: <span id="referencingHistoryCount"></span></div>
+        <div class="mb-3">
+            <h6>Content Input</h6>
+            <pre class="analysis-output p-2 small" id="referencingHistoryContent"></pre>
+        </div>
+        <div>
+            <h6>Generated Output</h6>
+            <pre class="analysis-output p-2 small" id="referencingHistoryResult"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% block extra_js %}
+{{ block.super }}
+{% if content_history_enabled %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("contentHistoryModal");
+    if (!modal) return;
+    modal.addEventListener("show.bs.modal", function (event) {
+        const trigger = event.relatedTarget;
+        if (!trigger) return;
+        modal.querySelector("#contentHistoryCreated").textContent = trigger.getAttribute("data-created") || "";
+        modal.querySelector("#contentHistoryStructure").textContent = trigger.getAttribute("data-structure") || "";
+        modal.querySelector("#contentHistoryResult").textContent = trigger.getAttribute("data-result") || "";
+    });
+});
+</script>
+{% endif %}
+{% if referencing_history_enabled %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("referencingHistoryModal");
+    if (!modal) return;
+    modal.addEventListener("show.bs.modal", function (event) {
+        const trigger = event.relatedTarget;
+        if (!trigger) return;
+        modal.querySelector("#referencingHistoryCreated").textContent = trigger.getAttribute("data-created") || "";
+        modal.querySelector("#referencingHistoryStyle").textContent = trigger.getAttribute("data-style") || "";
+        modal.querySelector("#referencingHistoryCount").textContent = trigger.getAttribute("data-count") || "";
+        modal.querySelector("#referencingHistoryContent").textContent = trigger.getAttribute("data-content") || "";
+        modal.querySelector("#referencingHistoryResult").textContent = trigger.getAttribute("data-result") || "";
+    });
+});
+</script>
+{% endif %}
+{% endblock %}
+{% endblock %}
+{% block extra_css %}
+<style>
+    .history-modal .modal-content {
+        background: #0b1220;
+        color: #e5e7eb;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .history-modal .analysis-output {
+        background: #0f172a;
+        color: #e5e7eb;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    .history-modal .text-muted {
+        color: #cbd5e1 !important;
+    }
+</style>
+{% endblock %}

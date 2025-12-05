@@ -1,0 +1,345 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+
+{% block page_title %}User Activity{% endblock %}
+
+{% block extra_css %}
+<style>
+    .metric-card {
+        background: rgba(255,255,255,0.02);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px;
+    }
+    canvas {
+        background: rgba(0,0,0,0.2);
+        border-radius: 12px;
+        padding: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-1">User Activity</h1>
+        <p class="text-muted mb-0">
+            Filter by user and date range to see jobs and amount trends.
+            {% if selected_user %}<span class="badge bg-secondary ms-2">{{ selected_user.get_role_display }}</span>{% endif %}
+        </p>
+    </div>
+</div>
+
+<form method="get" class="card shadow-sm mb-3">
+    <div class="card-body">
+        <input type="hidden" name="role" id="roleInput" value="{{ role_filter }}">
+        <div class="mb-3 d-flex flex-wrap gap-2">
+            {% for role in role_choices %}
+                <button type="button" data-role="{{ role }}" class="btn role-btn {% if role_filter == role %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    {{ role|capfirst }}
+                </button>
+            {% endfor %}
+        </div>
+        {% if role_filter %}
+        <div class="row g-3 align-items-end">
+            <div class="col-lg-5">
+                <label class="form-label">User</label>
+                <select name="user" class="form-select">
+                    {% for u in users %}
+                        <option value="{{ u.id }}" {% if selected_user and selected_user.id == u.id %}selected{% endif %}>
+                            {{ u.get_full_name|default:u.email }} ({{ u.get_role_display }})
+                        </option>
+                    {% empty %}
+                        <option disabled selected>No users found</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-3">
+                <label class="form-label">From</label>
+                <input type="date" name="start" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-lg-3">
+                <label class="form-label">To</label>
+                <input type="date" name="end" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+            </div>
+            <div class="col-lg-1 d-grid">
+                <label class="form-label">&nbsp;</label>
+                <button class="btn btn-primary" type="submit">Apply</button>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-muted">Select a role to load users and filter by date.</div>
+        {% endif %}
+    </div>
+</form>
+
+<div class="row g-3 mb-3">
+    {% if selected_user and selected_user.role == 'global' %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm metric-card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Total Gems Spent</div>
+                    <div class="display-6 fw-semibold">{{ total_gems_spent|default:0 }}</div>
+                    <div class="text-muted small">{{ start_date|date:"d M Y" }} - {{ end_date|date:"d M Y" }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm metric-card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Analyze Documents</div>
+                    <div class="display-6 fw-semibold">{{ analyze_count|default:0 }}</div>
+                    <div class="text-muted small">{{ start_date|date:"d M Y" }} - {{ end_date|date:"d M Y" }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm metric-card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Structure Generations</div>
+                    <div class="display-6 fw-semibold">{{ structure_count|default:0 }}</div>
+                    <div class="text-muted small">{{ start_date|date:"d M Y" }} - {{ end_date|date:"d M Y" }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm metric-card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Content Generations</div>
+                    <div class="display-6 fw-semibold">{{ content_count|default:0 }}</div>
+                    <div class="text-muted small">{{ start_date|date:"d M Y" }} - {{ end_date|date:"d M Y" }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <div class="card shadow-sm metric-card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Monster Clicks</div>
+                    <div class="display-6 fw-semibold">{{ monster_count|default:0 }}</div>
+                    <div class="text-muted small">{{ start_date|date:"d M Y" }} - {{ end_date|date:"d M Y" }}</div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm metric-card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Jobs Completed</div>
+                    <div class="display-6 fw-semibold">{{ total_jobs }}</div>
+                    <div class="text-muted small">{{ start_date|date:"d M Y" }} - {{ end_date|date:"d M Y" }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm metric-card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Amount (INR)</div>
+                    <div class="display-6 fw-semibold">{{ total_amount|currency }}</div>
+                    <div class="text-muted small">{{ start_date|date:"d M Y" }} - {{ end_date|date:"d M Y" }}</div>
+                </div>
+            </div>
+        </div>
+        {% if completed_jobs_count != None %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm metric-card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Completed Jobs</div>
+                    <div class="display-6 fw-semibold">{{ completed_jobs_count|default:0 }}</div>
+                    <div class="text-muted small">{{ start_date|date:"d M Y" }} - {{ end_date|date:"d M Y" }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if word_count_total != None %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm metric-card h-100">
+                <div class="card-body">
+                    <div class="text-muted small">Words Generated</div>
+                    <div class="display-6 fw-semibold">{{ word_count_total|default:0 }}</div>
+                    <div class="text-muted small">{{ start_date|date:"d M Y" }} - {{ end_date|date:"d M Y" }}</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endif %}
+</div>
+
+<div class="row g-3 mb-3">
+    {% if selected_user and selected_user.role == 'global' %}
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="fw-semibold mb-2">Gems Spent per Day</h6>
+                    <canvas id="gemsChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="fw-semibold mb-2">Analyze per Day</h6>
+                    <canvas id="analyzeChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="fw-semibold mb-2">Structure per Day</h6>
+                    <canvas id="structureChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="fw-semibold mb-2">Content per Day</h6>
+                    <canvas id="contentChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="fw-semibold mb-2">Monster Clicks per Day</h6>
+                    <canvas id="monsterChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="fw-semibold mb-2">Jobs per Day</h6>
+                    <canvas id="jobsChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h6 class="fw-semibold mb-2">Amount per Day (INR)</h6>
+                    <canvas id="amountChart" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body d-flex justify-content-between align-items-center">
+        <h6 class="fw-semibold mb-0">Daily Breakdown</h6>
+        {% if full_day_rows %}
+        <a class="btn btn-sm btn-outline-primary" href="?export=csv{% if role_filter %}&role={{ role_filter }}{% endif %}{% if selected_user %}&user={{ selected_user.id }}{% endif %}{% if start_date %}&start={{ start_date|date:'Y-m-d' }}{% endif %}{% if end_date %}&end={{ end_date|date:'Y-m-d' }}{% endif %}">
+            Download CSV
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body pt-0">
+        <div class="table-responsive">
+            <table class="table table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        {% if selected_user and selected_user.role == 'global' %}
+                            <th class="text-end">Activity</th>
+                            <th class="text-end">Gems</th>
+                        {% else %}
+                            <th class="text-end">Jobs</th>
+                            <th class="text-end">Amount</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in day_rows %}
+                        <tr>
+                            <td>{{ row.day|date:"d M Y" }}</td>
+                            <td class="text-end">{{ row.total_jobs }}</td>
+                            {% if selected_user and selected_user.role == 'global' %}
+                                <td class="text-end">{{ row.total_amount }}</td>
+                            {% else %}
+                                <td class="text-end">{{ row.total_amount|currency }}</td>
+                            {% endif %}
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="3" class="text-muted text-center">No data for this range.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Keep selected role when applying filters
+    const roleInput = document.getElementById('roleInput');
+    const roleButtons = document.querySelectorAll('.role-btn');
+    roleButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const role = btn.getAttribute('data-role');
+            roleInput.value = role;
+            roleButtons.forEach(b => b.classList.remove('btn-primary'));
+            roleButtons.forEach(b => b.classList.add('btn-outline-primary'));
+            btn.classList.add('btn-primary');
+            btn.classList.remove('btn-outline-primary');
+            btn.form.submit();
+        });
+    });
+
+    const labels = {{ chart_labels|safe|default:"[]" }};
+    const jobsData = {{ chart_jobs|safe|default:"[]" }};
+    const amountData = {{ chart_amounts|safe|default:"[]" }};
+    const gemsLabels = {{ gems_chart_labels|safe|default:"[]" }};
+    const gemsData = {{ gems_chart_values|safe|default:"[]" }};
+    const analyzeLabels = {{ analyze_chart_labels|safe|default:"[]" }};
+    const analyzeData = {{ analyze_chart_values|safe|default:"[]" }};
+    const structureLabels = {{ structure_chart_labels|safe|default:"[]" }};
+    const structureData = {{ structure_chart_values|safe|default:"[]" }};
+    const contentLabels = {{ content_chart_labels|safe|default:"[]" }};
+    const contentData = {{ content_chart_values|safe|default:"[]" }};
+    const monsterLabels = {{ monster_chart_labels|safe|default:"[]" }};
+    const monsterData = {{ monster_chart_values|safe|default:"[]" }};
+
+    const baseOptions = {
+        responsive: true,
+        plugins: {
+            legend: { display: false },
+            tooltip: { mode: 'index', intersect: false }
+        },
+        scales: {
+            x: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255,255,255,0.1)' } },
+            y: { ticks: { color: '#cbd5e1' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+        }
+    };
+
+    function renderLine(ctxId, labelsData, values, color, label) {
+        const ctx = document.getElementById(ctxId);
+        if (!ctx) return;
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labelsData,
+                datasets: [{
+                    label: label,
+                    data: values,
+                    borderColor: color,
+                    backgroundColor: color + '33',
+                    tension: 0.25,
+                    fill: true,
+                }]
+            },
+            options: baseOptions
+        });
+    }
+
+    renderLine('jobsChart', labels, jobsData, '#60a5fa', 'Jobs');
+    renderLine('amountChart', labels, amountData, '#34d399', 'Amount (INR)');
+    renderLine('gemsChart', gemsLabels, gemsData, '#f97316', 'Gems Spent');
+    renderLine('analyzeChart', analyzeLabels, analyzeData, '#22c55e', 'Analyze');
+    renderLine('structureChart', structureLabels, structureData, '#a855f7', 'Structure');
+    renderLine('contentChart', contentLabels, contentData, '#0ea5e9', 'Content');
+    renderLine('monsterChart', monsterLabels, monsterData, '#ef4444', 'Monster');
+</script>
+{% endblock %}

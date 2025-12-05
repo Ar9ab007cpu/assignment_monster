@@ -1,0 +1,7 @@
+<div class="d-flex flex-wrap gap-2">
+    {% for button in data.buttons %}
+        <a class="btn btn-{% if button.variant %}{{ button.variant }}{% else %}outline-primary{% endif %}" href="{{ button.href|default:'#' }}">
+            {{ button.label }}
+        </a>
+    {% endfor %}
+</div>

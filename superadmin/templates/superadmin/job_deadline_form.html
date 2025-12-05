@@ -1,0 +1,43 @@
+{% extends "common/base.html" %}
+
+{% block page_title %}Update Job Deadlines{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h2 class="mb-3">Update Deadlines</h2>
+        <p class="text-muted">
+            Job: {{ view.job.job_id_customer }} ({{ view.job.system_id }}) |
+            Marketing Owner: {{ view.job.created_by.get_full_name|default:view.job.created_by.email }}
+        </p>
+        <form method="post">
+            {% csrf_token %}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Expected Deadline</label>
+                    {{ form.expected_deadline }}
+                    {% for error in form.expected_deadline.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Strict Deadline</label>
+                    {{ form.strict_deadline }}
+                    {% for error in form.strict_deadline.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% if form.non_field_errors %}
+                {% for error in form.non_field_errors %}
+                    <div class="text-danger small mt-2">{{ error }}</div>
+                {% endfor %}
+            {% endif %}
+            <div class="text-end mt-3 d-flex justify-content-end gap-2">
+                <a class="btn btn-outline-secondary" href="{% url 'superadmin:job_detail' view.job.pk %}">Cancel</a>
+                <button class="btn btn-primary" type="submit">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

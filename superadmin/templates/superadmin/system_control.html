@@ -1,0 +1,105 @@
+{% extends "common/base.html" %}
+
+{% block page_title %}System Control | Assignment Monster{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-1">Management Systems</h1>
+        <p class="text-muted mb-0">Toggle access for each portal section. Changes take effect immediately.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'superadmin:system_control' %}">Reset View</a>
+</div>
+<form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <div class="card shadow-sm">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">System</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Guests / Signup</th>
+                        <th scope="col">Marketing Portal</th>
+                        <th scope="col">Super Admins & Co-Super Admins</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for form in formset %}
+                        {{ form.id }}
+                        <tr id="system-{{ form.instance.key }}">
+                            <td>
+                                <strong>{{ form.instance.name }}</strong>
+                                <div class="text-muted small">
+                                    Key: <code>{{ form.instance.key }}</code>
+                                </div>
+                            </td>
+                            <td>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger small">{{ form.description.errors|join:", " }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    {{ form.enabled_for_accounts }}
+                                    <label class="form-check-label">
+                                        {{ form.enabled_for_accounts.label_tag }}
+                                    </label>
+                                </div>
+                                {% if form.enabled_for_accounts.errors %}
+                                    <div class="text-danger small">{{ form.enabled_for_accounts.errors|join:", " }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    {{ form.enabled_for_marketing }}
+                                    <label class="form-check-label">
+                                        {{ form.enabled_for_marketing.label_tag }}
+                                    </label>
+                                </div>
+                                {% if form.enabled_for_marketing.errors %}
+                                    <div class="text-danger small">{{ form.enabled_for_marketing.errors|join:", " }}</div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="form-check form-switch">
+                                    {{ form.enabled_for_superadmins }}
+                                    <label class="form-check-label">
+                                        {{ form.enabled_for_superadmins.label_tag }}
+                                    </label>
+                                </div>
+                                {% if form.enabled_for_superadmins.errors %}
+                                    <div class="text-danger small">{{ form.enabled_for_superadmins.errors|join:", " }}</div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                No management systems configured yet.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="card-body border-top text-end">
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+    {% if focus_key %}
+        <script>
+            const row = document.getElementById("system-{{ focus_key }}");
+            if (row) {
+                row.classList.add("table-warning");
+                row.scrollIntoView({behavior: "smooth", block: "center"});
+            }
+        </script>
+    {% endif %}
+{% endblock %}

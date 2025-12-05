@@ -1,0 +1,128 @@
+{% load nav_extras %}
+<div class="sidebar-shell">
+    {# Scrollable container for all nav items #}
+    <div class="sidebar-nav-scroll">
+        <div class="list-group shadow-sm">
+            {# Home button at the top for global users #}
+            {% if is_global_user %}
+                <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:welcome' %}" href="{% url 'marketing:welcome' %}">
+                    <span>{% include "common/sidebar_icon.html" with label="Home" %} Home</span>
+                </a>
+            {% endif %}
+
+            {# Regular nav items #}
+            {% if nav_items %}
+                {% if not is_global_user %}
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'marketing:welcome' %}" href="{% url 'marketing:welcome' %}">
+                        <span>{% include "common/sidebar_icon.html" with label="Home" %} Home</span>
+                    </a>
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'marketing:dashboard' %}" href="{% url 'marketing:dashboard' %}">
+                        <span>{% include "common/sidebar_icon.html" with label="Dashboard" %} Dashboard</span>
+                    </a>
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'marketing:create_job' %}" href="{% url 'marketing:create_job' %}">
+                        <span>{% include "common/sidebar_icon.html" with label="Create Job" %} Create Job</span>
+                    </a>
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'marketing:all_projects' %}" href="{% url 'marketing:all_projects' %}">
+                        <span>{% include "common/sidebar_icon.html" with label="All Projects" %} All Projects</span>
+                    </a>
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'marketing:history' %}" href="{% url 'marketing:history' %}">
+                        <span>{% include "common/sidebar_icon.html" with label="History" %} History</span>
+                    </a>
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'marketing:deleted_jobs' %}" href="{% url 'marketing:deleted_jobs' %}">
+                        <span>{% include "common/sidebar_icon.html" with label="Deleted Jobs" %} Deleted Jobs</span>
+                    </a>
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'accounts:profile' %}" href="{% url 'accounts:profile' %}">
+                        <span>{% include "common/sidebar_icon.html" with label="Profile" %} Profile</span>
+                    </a>
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'tickets:my_tickets' %}" href="{% url 'tickets:my_tickets' %}">
+                        <span>{% include "common/sidebar_icon.html" with label="Tickets" %} My Tickets</span>
+                    </a>
+                {% else %}
+                {% for item in nav_items %}
+                    {% with label_lower=item.label|default:''|lower %}
+                        {% url item.url_name as nav_url %}
+                        {% if item.url_name == "tickets:admin_history" or label_lower == "ticket center" %}
+                            {# hide ticket center for marketing #}
+                        {% elif item.url_name == "accounts:logout" or label_lower == "logout" %}
+                            {# skip logout; footer button handles sign out #}
+                        {% else %}
+                            {% if is_global_user %}
+                                {% if label_lower == "all projects" or label_lower == "create job" or label_lower == "history" or label_lower == "deleted jobs" or label_lower == "holidays" or label_lower == "home" %}
+                                    {# hidden entries for global users (home already shown at top) #}
+                                {% else %}
+                                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class item.url_name %}" href="{{ nav_url }}">
+                                        <span>{% include "common/sidebar_icon.html" with label=item.label %} {{ item.label }}</span>
+                                        {% if item.badge_key %}
+                                            {% nav_badge nav_counts item.badge_key as count %}
+                                            {% if count %}
+                                                <span class="badge text-bg-primary">{{ count }}</span>
+                                            {% endif %}
+                                        {% endif %}
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class item.url_name %}" href="{{ nav_url }}">
+                                    <span>{% include "common/sidebar_icon.html" with label=item.label %} {{ item.label }}</span>
+                                    {% if item.badge_key %}
+                                        {% nav_badge nav_counts item.badge_key as count %}
+                                        {% if count %}
+                                            <span class="badge text-bg-primary">{{ count }}</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </a>
+                            {% endif %}
+                        {% endif %}
+                    {% endwith %}
+                {% endfor %}
+                {% endif %}
+            {% else %}
+                {# Fallback if no nav items #}
+                {% if not is_global_user %}
+                    <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:welcome' %}" href="{% url 'marketing:welcome' %}">Home</a>
+                    <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:all_projects' %}" href="{% url 'marketing:all_projects' %}">All Projects</a>
+                    <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:create_job' %}" href="{% url 'marketing:create_job' %}">Create Job</a>
+                    <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:history' %}" href="{% url 'marketing:history' %}">History</a>
+                    <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:deleted_jobs' %}" href="{% url 'marketing:deleted_jobs' %}">Deleted Jobs</a>
+                    <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:holidays' %}" href="{% url 'marketing:holidays' %}">Holidays</a>
+                {% endif %}
+            {% endif %}
+
+            {# Global user AI tools in same container #}
+            {% if is_global_user %}
+                <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:analyze' %}" href="{% url 'marketing:analyze' %}"><i class="fa fa-magnifying-glass me-2"></i> Assignment Analyzer</a>
+                <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:global_structure' %}" href="{% url 'marketing:global_structure' %}"><i class="fa fa-diagram-project me-2"></i> Structure</a>
+                <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:global_content' %}" href="{% url 'marketing:global_content' %}"><i class="fa fa-file-lines me-2"></i> Content</a>
+                <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:global_referencing' %}" href="{% url 'marketing:global_referencing' %}"><i class="fa fa-book me-2"></i> Referencing</a>
+                <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:global_plag' %}" href="{% url 'marketing:global_plag' %}"><i class="fa fa-ban me-2"></i> Plag Report</a>
+                <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:global_ai' %}" href="{% url 'marketing:global_ai' %}"><i class="fa fa-robot me-2"></i> AI Report</a>
+                <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:global_monster' %}" href="{% url 'marketing:global_monster' %}"><i class="fa fa-bolt me-2"></i> Monster Click</a>
+                <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:global_history' %}" href="{% url 'marketing:global_history' %}">
+                    <span class="gems-nav-icon me-2">{% include "common/components/gems_icon.html" %}</span>
+                    Gems History
+                </a>
+                <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:global_coupons' %}" href="{% url 'marketing:global_coupons' %}"><i class="fa fa-ticket me-2"></i> Coupons</a>
+                <a class="list-group-item list-group-item-action {% nav_active_class 'marketing:global_notices' %}" href="{% url 'marketing:global_notices' %}"><i class="fa fa-bell me-2"></i> Notice</a>
+                <a class="list-group-item list-group-item-action {% nav_active_class 'tickets:my_tickets' %}" href="{% url 'tickets:my_tickets' %}"><i class="fa fa-ticket me-2"></i> Raise Ticket</a>
+
+                {# Generation Steps in same scrollable container #}
+                {% with current_job_pk=request.resolver_match.kwargs.pk current_view=request.resolver_match.view_name current_section=request.resolver_match.kwargs.section|default:'' %}
+                {% if current_job_pk %}
+                    <div class="mt-2 mb-2 px-2">
+                        <small class="text-muted fw-bold text-uppercase">Generation Steps</small>
+                    </div>
+                    <a class="list-group-item list-group-item-action {% if current_view == 'marketing:job_detail' %}active{% endif %}" href="{% url 'marketing:job_detail' current_job_pk %}">Job Overview</a>
+                    <a class="list-group-item list-group-item-action {% if current_view == 'marketing:section_detail' and current_section == 'summary' %}active{% endif %}" href="{% url 'marketing:section_detail' current_job_pk 'summary' %}">Job Summary</a>
+                    <a class="list-group-item list-group-item-action {% if current_view == 'marketing:section_detail' and current_section == 'structure' %}active{% endif %}" href="{% url 'marketing:section_detail' current_job_pk 'structure' %}">Job Structure</a>
+                    <a class="list-group-item list-group-item-action {% if current_view == 'marketing:section_detail' and current_section == 'content' %}active{% endif %}" href="{% url 'marketing:section_detail' current_job_pk 'content' %}">Content</a>
+                    <a class="list-group-item list-group-item-action {% if current_view == 'marketing:section_detail' and current_section == 'referencing' %}active{% endif %}" href="{% url 'marketing:section_detail' current_job_pk 'referencing' %}">Referencing</a>
+                    <a class="list-group-item list-group-item-action {% if current_view == 'marketing:section_detail' and current_section == 'plag-report' %}active{% endif %}" href="{% url 'marketing:section_detail' current_job_pk 'plag-report' %}">Plag Report</a>
+                    <a class="list-group-item list-group-item-action {% if current_view == 'marketing:section_detail' and current_section == 'ai-report' %}active{% endif %}" href="{% url 'marketing:section_detail' current_job_pk 'ai-report' %}">AI Report</a>
+                    <a class="list-group-item list-group-item-action {% if current_view == 'marketing:section_detail' and current_section == 'full-content' %}active{% endif %}" href="{% url 'marketing:section_detail' current_job_pk 'full-content' %}">Full Content</a>
+                {% endif %}
+                {% endwith %}
+            {% endif %}
+        </div>
+    </div>
+
+    {# Sign Out button removed per request #}
+</div>

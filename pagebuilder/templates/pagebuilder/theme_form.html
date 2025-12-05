@@ -1,0 +1,14 @@
+{% extends "common/base.html" %}
+
+{% block page_title %}New Theme{% endblock %}
+
+{% block content %}
+<h1 class="h5 mb-3">Create Theme</h1>
+<form method="post" class="card shadow-sm p-3">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <div class="d-flex justify-content-end">
+        <button class="btn btn-primary" type="submit">Save Theme</button>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% comment %}
+Reusable pill badge to show gems balance and optional cost.
+{% endcomment %}
+{% with value=balance|default_if_none:0 show_cost=show_cost|default_if_none:True %}
+<span class="gems-pill {{ extra_classes|default:'' }}">
+    <span class="gems-pill-icon">
+        {% include "common/components/gems_icon.html" %}
+    </span>
+    <span class="gems-pill-text">
+        Gems: {{ value|floatformat:2 }}{% if show_cost and cost is not None %}
+            - {% if cost_note %}{{ cost_note }}
+              {% else %}Cost {{ cost|floatformat:2 }}
+            {% endif %}
+        {% endif %}
+    </span>
+</span>
+{% endwith %}

@@ -1,0 +1,101 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+
+{% block page_title %}Job History{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+    <div>
+        <h2 class="mb-1">Job History</h2>
+        <p class="text-muted mb-0">Search through every job drop with quick context.</p>
+    </div>
+    <form method="get" class="row g-2 align-items-end mt-3 mt-md-0">
+        <div class="col-12 col-md-4">
+            <label class="form-label small mb-1">Search</label>
+            <input type="search" name="q" class="form-control" placeholder="Search jobs..." value="{{ search_query }}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small mb-1">From</label>
+            <input type="date" name="start" class="form-control" value="{{ start_date|date:'Y-m-d' }}">
+        </div>
+        <div class="col-6 col-md-3">
+            <label class="form-label small mb-1">To</label>
+            <input type="date" name="end" class="form-control" value="{{ end_date|date:'Y-m-d' }}">
+        </div>
+        <div class="col-12 col-md-2 d-grid">
+            <label class="form-label small mb-1">&nbsp;</label>
+            <button class="btn btn-primary" type="submit">Apply</button>
+        </div>
+    </form>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Created</th>
+                    <th>Job ID</th>
+                    <th>System ID</th>
+                    <th>Amount</th>
+                    <th>Instruction</th>
+                    <th>Status</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                    <tr>
+                        <td>{{ job.created_at|date:"d M Y" }}</td>
+                        <td>{{ job.job_id_customer }}</td>
+                        <td>{{ job.system_id }}</td>
+                        <td>{{ job.amount_inr|currency }}</td>
+                        <td>
+                            {{ job.instruction|truncatechars:80 }}
+                        </td>
+                        <td>
+                            {% if job.is_superadmin_approved %}
+                                <span class="badge text-bg-success">Approved</span>
+                            {% else %}
+                                <span class="badge text-bg-secondary">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-primary" href="{% url 'marketing:job_detail' job.pk %}">View</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted">No jobs found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% if paginator and paginator.num_pages > 1 %}
+        <nav aria-label="History pagination">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
+                    {% if page_obj.has_previous %}
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ base_query }}">Prev</a>
+                    {% else %}
+                        <span class="page-link">Prev</span>
+                    {% endif %}
+                </li>
+                {% for num in paginator.page_range %}
+                    <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}&{{ base_query }}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
+                    {% if page_obj.has_next %}
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ base_query }}">Next</a>
+                    {% else %}
+                        <span class="page-link">Next</span>
+                    {% endif %}
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

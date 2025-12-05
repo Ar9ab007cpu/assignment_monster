@@ -1,0 +1,75 @@
+{% load static common_tags %}
+<style>
+    .logout-btn:hover {
+        background: #ef4444 !important;
+        color: #fff !important;
+        border-color: #ef4444 !important;
+        box-shadow: 0 8px 18px rgba(239, 68, 68, 0.35);
+    }
+</style>
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary px-2 site-navbar sticky-top">
+    <div class="container-fluid">
+        {% if user.is_authenticated %}
+            {% if user.role == user.Role.MARKETING %}
+                {% url 'marketing:welcome' as brand_url %}
+            {% elif user.role == user.Role.SUPER_ADMIN or user.role == user.Role.CO_SUPER_ADMIN %}
+                {% url 'superadmin:welcome' as brand_url %}
+            {% else %}
+                {% url 'accounts:login' as brand_url %}
+            {% endif %}
+        {% else %}
+            {% url 'accounts:login' as brand_url %}
+        {% endif %}
+        <a class="navbar-brand site-brand d-flex align-items-center gap-3" href="{{ brand_url }}">
+            <span class="site-brand__icon">
+                <img src="{% static 'img/assignment-monster-logo.svg' %}" alt="Assignment Monster" loading="lazy">
+            </span>
+            <span class="site-brand__text">
+                <span class="site-brand__title">Assignment</span>
+                <span class="site-brand__subtitle">Monster</span>
+            </span>
+        </a>
+        {% if user.is_authenticated %}
+            {% active_notices user as header_notices %}
+            {% if header_notices %}
+                <button type="button" id="noticeToggleBtn" class="btn btn-sm btn-warning ms-2 position-relative">
+                    {{ header_notices|length }} notice{% if header_notices|length > 1 %}s{% endif %}
+                </button>
+            {% endif %}
+        {% endif %}
+        <div class="d-flex ms-auto align-items-center gap-2">
+            {% if user.is_authenticated %}
+                <button class="sidebar-toggle-btn me-2 d-none d-lg-inline-flex" id="sidebarToggleBtn" type="button" aria-label="Toggle sidebar">
+                    <i class="fa-solid fa-angles-left"></i>
+                </button>
+                <button class="theme-toggle-btn me-3" id="themeToggleBtn" type="button" aria-label="Toggle theme">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            {% endif %}
+            {% if user.is_authenticated %}
+                {% with display_name=user.get_full_name|default:user.email %}
+                {% with display_email=user.email %}
+                {% with initials=display_name|slice:":2"|upper %}
+                <span class="badge bg-light text-dark me-3">ID: {{ user.employee_id|default:user.id }}</span>
+                <div class="text-white me-3 text-end">
+                    <div class="fw-semibold">{{ display_name }}</div>
+                    <div class="small text-white-50">{{ display_email }}</div>
+                </div>
+                {% if user.profile_picture %}
+                    <img src="{{ user.profile_picture.url }}" alt="avatar" class="rounded-circle me-3" style="width:36px; height:36px; object-fit:cover; border:2px solid rgba(255,255,255,0.3);">
+                {% else %}
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-light text-dark fw-semibold me-3" style="width:36px; height:36px;">
+                        {{ initials }}
+                    </span>
+                {% endif %}
+                <a class="btn btn-light text-dark fw-semibold px-3 py-1 rounded-pill shadow-sm d-inline-flex align-items-center gap-2 logout-btn" href="{% url 'accounts:logout' %}">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    Logout
+                </a>
+                {% endwith %}
+                {% endwith %}
+                {% endwith %}
+            {% endif %}
+        </div>
+    </div>
+</nav>

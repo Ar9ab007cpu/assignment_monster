@@ -1,0 +1,19 @@
+{% comment %}Font Awesome icon mapping for sidebar labels{% endcomment %}
+{% with lower=label|lower %}
+  {% if "welcome" in lower or "home" in lower %}<i class="fa-solid fa-house me-2"></i>
+  {% elif "dashboard" in lower %}<i class="fa-solid fa-gauge-high me-2"></i>
+  {% elif "all jobs" in lower or "all projects" in lower %}<i class="fa-solid fa-briefcase me-2"></i>
+  {% elif "history" in lower %}<i class="fa-solid fa-clock-rotate-left me-2"></i>
+  {% elif "deleted" in lower %}<i class="fa-solid fa-trash-can me-2"></i>
+  {% elif "new job" in lower or "create" in lower %}<i class="fa-solid fa-plus me-2"></i>
+  {% elif "activity" in lower %}<i class="fa-solid fa-chart-line me-2"></i>
+  {% elif "user approval" in lower or "user" in lower %}<i class="fa-solid fa-users me-2"></i>
+  {% elif "profile update" in lower or "profile" in lower %}<i class="fa-solid fa-id-card me-2"></i>
+  {% elif "tickets" in lower or "ticket" in lower %}<i class="fa-solid fa-ticket me-2"></i>
+  {% elif "holiday" in lower %}<i class="fa-solid fa-calendar-day me-2"></i>
+  {% elif "form" in lower %}<i class="fa-solid fa-pen-to-square me-2"></i>
+  {% elif "system" in lower %}<i class="fa-solid fa-gear me-2"></i>
+  {% elif "builder" in lower %}<i class="fa-solid fa-cubes me-2"></i>
+  {% else %}<i class="fa-solid fa-circle-small me-2"></i>
+  {% endif %}
+{% endwith %}

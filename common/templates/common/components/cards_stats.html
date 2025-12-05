@@ -1,0 +1,24 @@
+{% if cards %}
+<div class="row g-3 mb-3">
+    {% for card in cards %}
+        <div class="col-12 col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="text-muted text-uppercase">{{ card.title }}</h6>
+                        {% if card.badge %}
+                            <span class="badge text-bg-secondary">{{ card.badge }}</span>
+                        {% endif %}
+                    </div>
+                    <h2 class="my-3">{{ card.value }}</h2>
+                    {% if card.url %}
+                        <a class="btn btn-outline-primary mt-auto" href="{{ card.url }}">
+                            View
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}

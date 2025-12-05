@@ -1,0 +1,94 @@
+{% extends "common/base.html" %}
+{% load static %}
+
+{% block page_title %}Profile{% endblock %}
+
+{% block content %}
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body text-center">
+                {% if user.profile_picture %}
+                    <img class="rounded-circle mb-3 profile-avatar" src="{{ user.profile_picture.url }}" alt="Profile Picture">
+                {% else %}
+                    <img class="rounded-circle mb-3 profile-avatar" src="{% static 'images/logo.png' %}" alt="Placeholder">
+                {% endif %}
+                <h4>{{ user.get_full_name }}</h4>
+                <p class="text-muted mb-1">{{ user.get_role_display }}</p>
+                <p class="mb-0">Employee ID: {{ user.employee_id|default:"Pending" }}</p>
+                <p class="text-muted">Email: {{ user.email }}</p>
+                <a class="btn btn-outline-primary w-100 mt-3" href="{% url 'accounts:profile_update_request' %}">
+                    Request Profile Update
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Profile Details</h5>
+                <div class="row">
+                    <div class="col-sm-6">
+                        <p><strong>First Name:</strong> {{ user.first_name }}</p>
+                        <p><strong>Last Name:</strong> {{ user.last_name }}</p>
+                        <p><strong>WhatsApp:</strong> {{ user.whatsapp_country_code }} {{ user.whatsapp_number }}</p>
+                    </div>
+                    <div class="col-sm-6">
+                        <p><strong>Qualification:</strong> {{ user.last_qualification }}</p>
+                        <p><strong>Approval Status:</strong> {{ user.is_account_approved|yesno:"Approved,Pending" }}</p>
+                        <p><strong>Created:</strong> {{ user.date_joined|date:"d M Y" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">Recent Update Requests</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Request For</th>
+                                <th>Status</th>
+                                <th>Updated Value</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in profile_requests %}
+                                <tr>
+                                    <td>{{ req.get_request_type_display }}</td>
+                                    <td>{{ req.get_status_display }}</td>
+                                    <td>{{ req.updated_value|default:"-" }}</td>
+                                    <td>{{ req.created_at|date:"d M Y" }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No requests submitted yet.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if requests_paginator and requests_paginator.num_pages > 1 %}
+                <nav aria-label="Recent update requests" class="mt-2">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item {% if not requests_page_obj.has_previous %}disabled{% endif %}">
+                            <a class="page-link" href="{% if requests_page_obj.has_previous %}?page={{ requests_page_obj.previous_page_number }}{% else %}#{% endif %}">Previous</a>
+                        </li>
+                        {% for num in requests_paginator.page_range %}
+                            <li class="page-item {% if requests_page_obj.number == num %}active{% endif %}">
+                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                            </li>
+                        {% endfor %}
+                        <li class="page-item {% if not requests_page_obj.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{% if requests_page_obj.has_next %}?page={{ requests_page_obj.next_page_number }}{% else %}#{% endif %}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

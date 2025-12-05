@@ -1,0 +1,26 @@
+body.theme-default,
+body.theme-guest {
+    background: linear-gradient(180deg, #f8f9fb, #eef1f6);
+}
+
+.theme-default .navbar,
+.theme-guest .navbar {
+    background-color: #0d6efd;
+}
+
+.theme-default .btn-primary,
+.theme-guest .btn-primary {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.theme-default .list-group-item-action.active,
+.theme-guest .list-group-item-action.active {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+.theme-default .badge,
+.theme-guest .badge {
+    border-radius: 999px;
+}

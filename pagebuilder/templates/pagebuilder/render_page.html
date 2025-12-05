@@ -1,0 +1,33 @@
+{% load static %}
+{% load pagebuilder_tags %}
+{% with theme=page.theme %}
+{% if theme %}
+<style>
+:root {
+    --pb-primary: {{ theme.primary_color }};
+    --pb-secondary: {{ theme.secondary_color }};
+    --pb-accent: {{ theme.accent_color }};
+    --pb-bg: {{ theme.background }};
+    --pb-font: {{ theme.font_family }};
+    --pb-font-size: {{ theme.base_font_size }};
+    --pb-radius: {{ theme.radius }};
+    --pb-shadow: {{ theme.shadow }};
+}
+.pb-anim-fade { animation: pbFade 0.6s ease forwards; opacity: 0; }
+@keyframes pbFade { from { opacity: 0; transform: translateY(8px);} to { opacity: 1; transform: translateY(0);} }
+</style>
+{% endif %}
+{% endwith %}
+<div class="pb-page" style="font-family: var(--pb-font, inherit); font-size: var(--pb-font-size, inherit);">
+    {% for area, blocks in page.areas.items %}
+        <div class="pb-area pb-area-{{ area }}">
+            {% for item in blocks %}
+                {% with block=item.block data=item.data style=item.style anim=item.animation_class %}
+                    <div class="pb-block pb-{{ block.block_type }} {{ anim }}" style="margin-bottom: {{ style.spacing|default:'24px' }};">
+                        {% include "pagebuilder/blocks/"|add:block.block_type|add:".html" with block=block data=data style=style %}
+                    </div>
+                {% endwith %}
+            {% endfor %}
+        </div>
+    {% endfor %}
+</div>

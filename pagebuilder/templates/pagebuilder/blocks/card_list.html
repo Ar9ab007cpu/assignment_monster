@@ -1,0 +1,19 @@
+<div class="row g-3">
+    {% for card in data.cards %}
+        <div class="col-12 col-md-4">
+            <div class="card h-100 shadow-sm" style="border-radius: var(--pb-radius, 12px); box-shadow: var(--pb-shadow, 0 10px 30px rgba(0,0,0,0.08));">
+                <div class="card-body">
+                    <p class="text-muted small mb-1">{{ card.title }}</p>
+                    <h4 class="mb-0">{{ card.value }}</h4>
+                    {% if card.badge %}
+                        <span class="badge text-bg-primary mt-2">{{ card.badge }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="alert alert-secondary mb-0">No cards configured.</div>
+        </div>
+    {% endfor %}
+</div>

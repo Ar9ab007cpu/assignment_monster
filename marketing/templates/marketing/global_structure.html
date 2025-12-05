@@ -1,0 +1,206 @@
+{% extends "common/base.html" %}
+{% block page_title %}Structure{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analysis-output {
+        background: #f8fafc;
+        color: #0f172a;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 12px;
+        white-space: pre-wrap;
+    }
+    body.theme-global .analysis-output,
+    body.theme-marketing .analysis-output,
+    body.theme-superadmin .analysis-output {
+        background: #111827;
+        color: #e5e7eb;
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+    .modal .analysis-output {
+        background: #0f172a;
+        color: #e5e7eb;
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    .modal-content {
+        background: #0b1220;
+        color: #e5e7eb;
+    }
+    .modal-content .text-muted {
+        color: #cbd5e1 !important;
+    }
+    .modal-title,
+    .modal-content h6 {
+        color: #e5e7eb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 px-lg-3 mb-2">
+    <div class="alert alert-info shadow-sm mb-0" role="alert">
+        Cost: 2 gems per new structure generated on this page.
+    </div>
+</div>
+<div class="d-flex justify-content-end mb-3">
+    {% include "common/components/gems_badge.html" with balance=gems_balance cost=structure_cost %}
+</div>
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Structure Generator</h5>
+                <p class="text-muted small">Paste the approved summary (required). The agent will return a detailed structure with word allocation.</p>
+                <form method="post" class="generation-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Summary*</label>
+                        <textarea class="form-control" name="instruction" rows="5" placeholder="Paste the job summary the structure must follow..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Coupon Code (optional)</label>
+                        <input type="text" class="form-control" name="coupon_code" placeholder="Enter coupon code to redeem">
+                    </div>
+                    <button class="btn btn-danger w-100">Generate Structure</button>
+                    <div class="mt-2 small text-muted">
+                        Cost: {{ structure_cost }} gems per new structure. Remaining balance: {{ gems_balance }}.
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="card-title mb-0">Generated Structure</h5>
+                    {% if result %}
+                        {% include "common/components/copy_button.html" with target="#structureOutput" label="Copy Output" %}
+                    {% endif %}
+                </div>
+                {% if result %}
+                    <div class="alert alert-success py-2">Deducted {{ deducted }} gems. New balance: {{ new_balance }}.</div>
+                    <pre id="structureOutput" class="analysis-output p-3 small" style="max-height: 320px; overflow-y: auto;">{{ result }}</pre>
+                {% else %}
+                    <div class="text-muted small">Run a structure generation to see the output here.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-3">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">Recent Structure History</h6>
+                </div>
+                {% if history_page %}
+                    <div class="table-responsive">
+                        <table class="table table-dark table-striped table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col" style="width: 25%;">Date &amp; Time</th>
+                                    <th scope="col">Summary Preview</th>
+                                    <th scope="col" class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in history_page %}
+                                <tr>
+                                    <td class="fw-semibold">{{ item.created_at|date:"d M Y, h:i A" }}</td>
+                                    <td class="text-muted">{{ item.summary|truncatechars:120 }}</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-light structure-history-link"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#structureHistoryModal"
+                                                data-created="{{ item.created_at|date:'d M Y, h:i A' }}"
+                                                data-summary="{{ item.summary|escape }}"
+                                                data-result="{{ item.result|escape }}">
+                                            View
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <div class="small text-muted">
+                            Page {{ history_page_number }} of {{ history_total_pages }}
+                        </div>
+                        <nav aria-label="Structure history pagination">
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item {% if history_page_number <= 1 %}disabled{% endif %}">
+                                    {% if history_page_number <= 1 %}
+                                    <a class="page-link" href="#" tabindex="-1">Prev</a>
+                                    {% else %}
+                                    <a class="page-link" href="?hist_page={{ history_page_number|add:'-1' }}">Prev</a>
+                                    {% endif %}
+                                </li>
+                                {% for p in history_page_numbers %}
+                                <li class="page-item {% if p == history_page_number %}active{% endif %}">
+                                    <a class="page-link" href="?hist_page={{ p }}">{{ p }}</a>
+                                </li>
+                                {% endfor %}
+                                <li class="page-item {% if history_page_number >= history_total_pages %}disabled{% endif %}">
+                                    {% if history_page_number >= history_total_pages %}
+                                    <a class="page-link" href="#" tabindex="-1">Next</a>
+                                    {% else %}
+                                    <a class="page-link" href="?hist_page={{ history_page_number|add:'1' }}">Next</a>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                {% else %}
+                    <div class="text-muted small">No structure history yet.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="structureHistoryModal" tabindex="-1" aria-labelledby="structureHistoryLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="structureHistoryLabel">Structure Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 small text-muted" id="structureHistoryCreated"></div>
+        <div class="mb-3">
+            <h6>Summary</h6>
+            <pre class="analysis-output p-2 small" id="structureHistorySummary"></pre>
+        </div>
+        <div>
+            <h6>Structure</h6>
+            <pre class="analysis-output p-2 small" id="structureHistoryResult"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("structureHistoryModal");
+    if (!modal) return;
+    modal.addEventListener("show.bs.modal", function (event) {
+        const trigger = event.relatedTarget;
+        if (!trigger) return;
+        modal.querySelector("#structureHistoryCreated").textContent = trigger.getAttribute("data-created") || "";
+        modal.querySelector("#structureHistorySummary").textContent = trigger.getAttribute("data-summary") || "";
+        modal.querySelector("#structureHistoryResult").textContent = trigger.getAttribute("data-result") || "";
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,246 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+
+{% block page_title %}Job Detail{% endblock %}
+
+{% block extra_css %}
+<style>
+    .animate-pulse {
+        animation: pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(255,193,7,0.6); }
+        70% { box-shadow: 0 0 0 10px rgba(255,193,7,0); }
+        100% { box-shadow: 0 0 0 0 rgba(255,193,7,0); }
+    }
+    .generated-pane {
+        max-height: 260px;
+        overflow-y: auto;
+    }
+    /* Ensure history content is readable on both light and dark themes */
+    .history-entry {
+        background: #ffffff;
+        color: #0f172a;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 10px;
+    }
+    body.theme-marketing .history-entry,
+    body.theme-superadmin .history-entry,
+    body.theme-default .history-entry {
+        background: #ffffff;
+        color: #0f172a;
+    }
+    body.theme-dark .history-entry {
+        background: #121825;
+        color: #e5e7eb;
+        border-color: rgba(255,255,255,0.08);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">{{ job.job_id_customer }} / {{ job.system_id }}</h2>
+        <p class="text-muted mb-0">Amount: {{ job.amount_inr|currency }} | Status: {{ job.get_status_display }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        {% if job.status != "completed" %}
+            <a class="btn btn-outline-primary" href="{% url 'tickets:create_ticket' %}?category=deadline_change&job={{ job.pk }}">
+                Request Deadline Change
+            </a>
+        {% endif %}
+        {% if not job.is_deleted %}
+            <a class="btn btn-outline-danger" href="{% url 'marketing:job_delete' job.pk %}" data-confirm="Delete job {{ job.job_id_customer }} ({{ job.system_id }})? This cannot be undone.">Delete</a>
+        {% endif %}
+        <a class="btn btn-outline-secondary" href="{% url 'marketing:all_projects' %}">Back to All Projects</a>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h5>Instructions</h5>
+        <p>{{ job.instruction|linebreaks }}</p>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Expected Deadline:</strong> {{ job.expected_deadline|deadline }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Strict Deadline:</strong> {{ job.strict_deadline|deadline }}</p>
+            </div>
+        </div>
+        <p class="text-muted small mb-0">
+            Last edited: {{ job.updated_at|date:"d M Y, h:i A" }}{% if job.updated_by %} by {{ job.updated_by.get_full_name|default:job.updated_by.email }}{% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h5>Attachments</h5>
+        <ul class="mb-0">
+            {% for attachment in attachments %}
+                <li><a href="{{ attachment.file.url }}" target="_blank">{{ attachment.file.name }}</a></li>
+            {% empty %}
+                <li class="text-muted">No attachments uploaded.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<h4 class="mb-2 d-flex align-items-center gap-3">
+    Generated Content
+    {% if user.role == user.Role.GLOBAL %}
+        <span class="badge bg-danger">Gems: {{ gems_balance|default:"0" }}</span>
+    {% endif %}
+</h4>
+<p class="text-muted mb-2">
+    Generate, regenerate (max 3), then approve each section. Once approved, regeneration is disabled.
+    {% if user.role == user.Role.GLOBAL %}
+        Costs (first generate only): Summary 2, Structure 2, Content 4, Referencing 1, Plag 3, AI 3, Full Content 5. Regenerations are free.
+    {% endif %}
+</p>
+{% if user.role == user.Role.GLOBAL %}
+<div class="mb-3 d-flex flex-wrap gap-2">
+    <form method="post" action="{% url 'marketing:section_action' %}" class="generation-form">
+        {% csrf_token %}
+        <input type="hidden" name="section_id" value="{{ sections.0.id }}">
+        <input type="hidden" name="action" value="monster">
+        <button type="submit" class="btn btn-outline-danger">
+            Monster Click (10 gems)
+        </button>
+    </form>
+</div>
+{% endif %}
+<div class="row g-3">
+    {% for section in sections %}
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>{{ section.get_section_type_display }}</span>
+                    <span class="badge {% if section.status == 'approved' %}text-bg-success{% elif section.status == 'regenerate' %}text-bg-warning text-dark{% else %}text-bg-secondary{% endif %}">{{ section.get_status_display }}</span>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <form method="post" action="{% url 'marketing:section_action' %}" class="d-flex gap-2 align-items-center section-form generation-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="section_id" value="{{ section.id }}">
+                            <input type="hidden" name="action" value="regenerate">
+                            <button type="submit"
+                                    class="btn btn-sm btn-warning animate-pulse"
+                                    {% if section.status == 'approved' or not section.can_regenerate or not section.prev_approved %}disabled{% endif %}>
+                                {% if section.regeneration_count > 0 %}Regenerate{% else %}Generate{% endif %}
+                                <span class="badge bg-dark ms-1">{{ section.regeneration_count|default:0 }}/3</span>
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'marketing:section_action' %}" class="section-form generation-form">
+                            {% csrf_token %}
+                            <input type="hidden" name="section_id" value="{{ section.id }}">
+                            <input type="hidden" name="action" value="approve">
+                            <button type="submit"
+                                    class="btn btn-sm btn-success"
+                                    {% if section.status == 'approved' or not section.prev_approved %}disabled{% endif %}>
+                                Approve
+                            </button>
+                        </form>
+                    </div>
+                    {% if section.history_display %}
+                    <div class="mb-2 d-flex gap-2 flex-wrap">
+                        {% for h in section.history_display %}
+                            <button type="button"
+                                    class="history-link btn btn-sm {% if h.approved %}btn-success{% else %}btn-outline-secondary{% endif %}"
+                                    data-target="hist-{{ section.id }}-{{ forloop.counter0 }}">
+                                {% if forloop.last %}Approved{% else %}{{ forloop.counter }}{% endif %}
+                            </button>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="d-flex justify-content-end mb-2">
+                        <button class="btn btn-sm btn-outline-primary toggle-section"
+                                type="button"
+                                data-target="section-{{ section.id }}"
+                                data-visible="false">
+                            View
+                        </button>
+                    </div>
+                    <div class="border rounded p-2 generated-pane" id="section-{{ section.id }}" hidden>
+                        {% for h in section.history_display %}
+                            <div id="hist-{{ section.id }}-{{ forloop.counter0 }}" class="history-entry" {% if not forloop.first %}style="display:none"{% endif %}>
+                                <div class="d-flex justify-content-between">
+                                    <span class="badge bg-secondary">{{ h.action|title }}</span>
+                                    <span class="text-muted">{% if h.created_at %}{{ h.created_at|date:"d M Y, h:i A" }}{% endif %}</span>
+                                </div>
+                                <div class="mt-1">{{ h.content|default:"No content generated."|linebreaks }}</div>
+                            </div>
+                        {% endfor %}
+                        {% if not section.history_display %}
+                            <div class="text-muted small">No content generated.</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".section-form").forEach(function(form) {
+        form.addEventListener("submit", function() {
+            const btn = form.querySelector("button[type='submit']");
+            if (btn) {
+                btn.dataset.originalText = btn.textContent;
+                btn.textContent = "Processing...";
+                btn.disabled = true;
+            }
+        });
+    });
+
+    document.querySelectorAll(".toggle-section").forEach(function(btn) {
+        const targetId = btn.getAttribute("data-target");
+        const target = targetId ? document.getElementById(targetId) : null;
+        if (!target) return;
+        btn.addEventListener("click", function(event) {
+            event.preventDefault();
+            const isVisible = btn.getAttribute("data-visible") === "true";
+            if (isVisible) {
+                target.hidden = true;
+                btn.textContent = "View";
+                btn.setAttribute("data-visible", "false");
+            } else {
+                target.hidden = false;
+                btn.textContent = "Hide";
+                btn.setAttribute("data-visible", "true");
+            }
+        }, { passive: false });
+    });
+
+    // History pagination toggles
+    document.querySelectorAll(".history-link").forEach(function(link) {
+        link.addEventListener("click", function(e) {
+            e.preventDefault();
+            const targetId = link.getAttribute("data-target");
+            if (!targetId) return;
+            const group = link.closest(".card-body");
+            if (!group) return;
+            group.querySelectorAll(".history-entry").forEach(function(entry) {
+                entry.style.display = entry.id === targetId ? "block" : "none";
+            });
+            // set active state
+            group.querySelectorAll(".history-link").forEach(function(btn) {
+                if (btn.getAttribute("data-target") === targetId) {
+                    btn.classList.remove("btn-outline-secondary");
+                    btn.classList.add("btn-primary");
+                } else if (!btn.classList.contains("btn-success")) {
+                    btn.classList.remove("btn-primary");
+                    btn.classList.add("btn-outline-secondary");
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

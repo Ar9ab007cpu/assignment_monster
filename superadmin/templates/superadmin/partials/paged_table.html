@@ -1,0 +1,48 @@
+<div class="card shadow-sm mb-3">
+    <div class="card-body table-responsive">
+        <h5 class="mb-2">{{ title }}</h5>
+        <table class="table table-sm align-middle">
+            <thead>
+                <tr>
+                    {% for h in headers %}<th>{{ h }}</th>{% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% if rows %}
+                    {% for row in rows %}
+                        <tr>
+                            {% for col in row %}
+                                <td>{{ col|safe }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="{{ headers|length }}" class="text-muted text-center">No {{ title|lower }}.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+        {% if page_obj %}
+        <nav aria-label="{{ title }} pagination">
+            <ul class="pagination pagination-sm mb-0">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?{{ request.GET.urlencode|default:'' }}&{{ title|slugify }}_page={{ page_obj.previous_page_number }}">Prev</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Prev</span></li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                        <li class="page-item"><a class="page-link" href="?{{ request.GET.urlencode|default:'' }}&{{ title|slugify }}_page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?{{ request.GET.urlencode|default:'' }}&{{ title|slugify }}_page={{ page_obj.next_page_number }}">Next</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>

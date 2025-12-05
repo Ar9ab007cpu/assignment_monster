@@ -1,0 +1,11 @@
+{% comment %}
+Reusable copy-to-clipboard button.
+Usage: {% include "common/components/copy_button.html" with target="#elementId" label="Copy" %}
+{% endcomment %}
+<button
+    type="button"
+    class="btn btn-sm btn-outline-secondary copy-btn {{ extra_classes|default:'' }}"
+    data-copy-target="{{ target }}"
+>
+    <i class="fa fa-copy me-1"></i>{{ label|default:"Copy" }}
+</button>

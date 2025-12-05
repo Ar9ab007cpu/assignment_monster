@@ -1,0 +1,148 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+{% block page_title %}Error Logs{% endblock %}
+
+{% block content %}
+<style>
+    .trace-row { display: table-row; }
+    .trace-row.d-none { display: none; }
+</style>
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h2 class="mb-2">Error Logs</h2>
+        <form method="get" class="row g-2">
+            <div class="col-md-3">
+                <label class="form-label">From</label>
+                <input type="datetime-local" name="start" value="{{ filters.start }}" class="form-control">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">To</label>
+                <input type="datetime-local" name="end" value="{{ filters.end }}" class="form-control">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Status</label>
+                <select name="status" class="form-select">
+                    <option value="">All</option>
+                    <option value="open" {% if filters.status == "open" %}selected{% endif %}>Open</option>
+                    <option value="resolved" {% if filters.status == "resolved" %}selected{% endif %}>Resolved</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Search</label>
+                <input type="text" name="q" value="{{ filters.q }}" class="form-control" placeholder="Path, message, traceback">
+            </div>
+            <div class="col-12 d-flex gap-2 flex-wrap">
+                <button class="btn btn-primary" type="submit">Apply</button>
+                <a class="btn btn-outline-secondary" href="{% url 'superadmin:error_logs' %}">Reset</a>
+                <a class="btn btn-outline-danger" href="?archive=1">Archive (& delete) logs older than 30 days</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body table-responsive">
+        <div class="d-flex justify-content-between">
+            <div class="text-muted small">Total: {{ total_logs|default:0 }}</div>
+        </div>
+        <table class="table table-sm align-middle mt-2">
+            <thead>
+                <tr>
+                    <th>When</th>
+                    <th>User</th>
+                    <th>Path</th>
+                    <th>Status</th>
+                    <th>Message</th>
+                    <th>IP</th>
+                    <th>Browser</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if logs %}
+                    {% for log in logs %}
+                    <tr class="{% if log.resolved %}table-success{% endif %}">
+                        <td>{{ log.created_at|date:"d M Y, h:i A" }}</td>
+                        <td>{% if log.user %}{{ log.user.get_full_name|default:log.user.email }}{% else %}Anonymous{% endif %}</td>
+                        <td>{{ log.path }}</td>
+                        <td>{{ log.status_code }}</td>
+                        <td class="text-truncate" style="max-width: 240px;" title="{{ log.message }}">{{ log.message }}</td>
+                        <td>{{ log.ip_address|default:"-" }}</td>
+                        <td>{{ log.user_agent|browser_name }}</td>
+                        <td class="d-flex gap-1">
+                            <button class="btn btn-sm btn-outline-info toggle-trace" type="button" data-target="#trace-{{ log.id }}">Trace</button>
+                            <form method="post" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="log_id" value="{{ log.id }}">
+                                {% if log.resolved %}
+                                    <input type="hidden" name="action" value="unresolve">
+                                    <button class="btn btn-sm btn-warning" type="submit">Reopen</button>
+                                {% else %}
+                                    <input type="hidden" name="action" value="resolve">
+                                    <button class="btn btn-sm btn-success" type="submit">Resolve</button>
+                                {% endif %}
+                            </form>
+                            <form method="post" class="d-inline" data-confirm="Delete this log?">
+                                {% csrf_token %}
+                                <input type="hidden" name="log_id" value="{{ log.id }}">
+                                <input type="hidden" name="action" value="delete">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr class="trace-row d-none" id="trace-{{ log.id }}">
+                        <td colspan="8">
+                            <pre class="small text-monospace mb-2" style="white-space: pre-wrap;">{% if log.traceback %}{{ log.traceback }}{% else %}(no traceback captured — older entries may not have stack traces recorded){% endif %}</pre>
+                            <div class="small text-muted">
+                                <strong>Message:</strong> {{ log.message|default:"-" }}<br>
+                                <strong>Referrer:</strong> {{ log.referrer|default:"-" }}
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="8" class="text-center text-muted">No error logs found.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+        {% if logs_paginator and logs_paginator.num_pages > 1 %}
+        <nav>
+            <ul class="pagination pagination-sm">
+                <li class="page-item {% if not logs_page_obj.has_previous %}disabled{% endif %}">
+                    <a class="page-link" href="{% if logs_page_obj.has_previous %}?page={{ logs_page_obj.previous_page_number }}{% else %}#{% endif %}">Prev</a>
+                </li>
+                {% for num in logs_page_window %}
+                    <li class="page-item {% if logs_page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                <li class="page-item {% if not logs_page_obj.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{% if logs_page_obj.has_next %}?page={{ logs_page_obj.next_page_number }}{% else %}#{% endif %}">Next</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+<script>
+(function() {
+    const buttons = document.querySelectorAll(".toggle-trace");
+    buttons.forEach(btn => {
+        const targetSel = btn.dataset.target;
+        const row = document.querySelector(targetSel);
+        if (!row) return;
+        btn.addEventListener("click", () => {
+            const isShown = !row.classList.contains("d-none");
+            document.querySelectorAll(".trace-row").forEach(el => el.classList.add("d-none"));
+            if (!isShown) {
+                row.classList.remove("d-none");
+            }
+            // focus the trace content into view
+            if (!isShown) {
+                row.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }
+        });
+    });
+})();
+</script>
+{% endblock %}

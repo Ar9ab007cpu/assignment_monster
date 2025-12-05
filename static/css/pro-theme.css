@@ -1,0 +1,423 @@
+:root {
+    --bg-surface: #f7f8fb;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --muted: #94a3b8;
+    --white: #ffffff;
+    --shadow: 0 10px 25px rgba(15, 23, 42, 0.12);
+    --radius: 14px;
+    --brand-default: #2563eb;
+    --brand-marketing: #10b981;
+    --brand-superadmin: #f59e0b;
+    --brand-coadmin: #a855f7;
+    --brand-global: #ef4444;
+}
+
+body {
+    background: var(--bg-surface) !important;
+    color: var(--text-primary);
+}
+
+.h1, h1 { font-size: 2rem; font-weight: 700; }
+.h2, h2 { font-size: 1.6rem; font-weight: 700; }
+.h3, h3 { font-size: 1.35rem; font-weight: 600; }
+
+.home-heading {
+    font-weight: 800;
+}
+
+.navbar {
+    background: linear-gradient(90deg, #0f172a, #1e293b);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    position: relative;
+}
+.site-navbar {
+    margin-bottom: 0 !important;
+    position: sticky;
+    top: 0;
+    z-index: 1100;
+}
+.navbar::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #4c1d95, #1e3a8a, #0ea5e9);
+}
+.theme-marketing .navbar::after {
+    background: #0cb77c;
+}
+.theme-global .navbar::after {
+    background: #ef4444;
+}
+
+.navbar .btn {
+    border-radius: 10px;
+}
+
+.list-group-item {
+    border: none;
+    border-radius: 10px !important;
+    margin-bottom: 8px;
+    background: #e2e8f0;
+    color: var(--text-primary);
+    transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease;
+}
+
+.list-group-item:hover {
+    transform: translateX(2px);
+    background: #d9e2ef;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+}
+.list-group-item i {
+    color: #64748b;
+    min-width: 18px;
+}
+
+.card {
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.card-title, h1, h2, h3, h4, h5 {
+    color: var(--text-primary);
+}
+
+.text-muted {
+    color: var(--text-secondary) !important;
+}
+
+.btn {
+    border-radius: 12px;
+    transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease, border-color 120ms ease;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+}
+
+.theme-marketing .btn-primary,
+.theme-marketing .btn-outline-primary:hover {
+    background-color: var(--brand-marketing);
+    border-color: var(--brand-marketing);
+}
+.theme-global .navbar {
+    background: linear-gradient(90deg, #300f1d, #be123c, #f43f5e);
+    box-shadow: 0 6px 18px rgba(244, 63, 94, 0.2);
+    box-shadow: 0 6px 18px rgba(244, 63, 94, 0.2);
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 2px solid #ef4444;
+    min-height: auto;
+}
+.theme-global .navbar::after {
+    height: 4px;
+    background: #ef4444;
+    bottom: 0;
+}
+.theme-global .list-group-item-action {
+    border-radius: 12px;
+    border-color: transparent;
+    margin-bottom: 0.35rem;
+    transition: all 0.2s ease;
+}
+.theme-global .list-group-item-action.active,
+.theme-global .list-group-item-action:hover {
+    background: linear-gradient(135deg, #fb7185, #ef4444);
+    border-color: #fb7185;
+    color: #fff;
+    box-shadow: 0 8px 16px rgba(244, 63, 94, 0.35);
+}
+.theme-global .btn-primary,
+.theme-global .btn-outline-primary:hover {
+    background-color: var(--brand-global);
+    border-color: var(--brand-global);
+}
+
+.theme-superadmin .btn-primary,
+.theme-superadmin .btn-outline-primary:hover {
+    background-color: var(--brand-superadmin);
+    border-color: var(--brand-superadmin);
+}
+.theme-superadmin .card.accent-card { background: linear-gradient(135deg, #fef3c7, #fbbf24); color: #0f172a; }
+.theme-marketing .card.accent-card { background: linear-gradient(135deg, #d1fae5, #10b981); color: #0f172a; }
+.theme-default .card.accent-card { background: linear-gradient(135deg, #dbeafe, #60a5fa); color: #0f172a; }
+
+.theme-default .btn-primary,
+.theme-default .btn-outline-primary:hover {
+    background-color: var(--brand-default);
+    border-color: var(--brand-default);
+}
+
+.theme-marketing .badge {
+    background-color: var(--brand-marketing);
+}
+
+.theme-superadmin .badge {
+    background-color: var(--brand-superadmin);
+}
+.theme-global .badge {
+    background-color: var(--brand-global);
+}
+
+.theme-default .badge {
+    background-color: var(--brand-default);
+}
+
+.toast {
+    box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+    border-radius: 10px;
+}
+
+/* Dark theme overrides */
+.theme-dark {
+    --bg-surface: #0b1120;
+    --text-primary: #e2e8f0;
+    --text-secondary: #cbd5e1;
+    --muted: #94a3b8;
+}
+body.theme-dark {
+    background: var(--bg-surface) !important;
+    color: var(--text-primary);
+}
+.theme-dark .navbar {
+    background: linear-gradient(90deg, #0b1120, #111827);
+}
+.theme-dark .list-group-item {
+    background: #1f2937;
+    color: var(--text-primary);
+}
+.theme-dark .list-group-item:hover {
+    background: #2d3748;
+}
+.theme-dark .card {
+    background: #111827;
+    color: var(--text-primary);
+}
+.theme-dark .management-card {
+    background: linear-gradient(135deg, #0b1120, #111827);
+}
+.theme-dark .accent-card {
+    color: #0f172a;
+}
+
+/* Super admin accent bars */
+.theme-superadmin .card {
+    border: 2px solid rgba(76, 29, 149, 0.55);
+    box-shadow: 0 8px 18px rgba(76, 29, 149, 0.08);
+}
+.theme-global .card {
+    border: 2px solid rgba(239, 68, 68, 0.45);
+    box-shadow: 0 8px 18px rgba(239, 68, 68, 0.12);
+}
+.theme-superadmin .card .card-body {
+    border: 2px solid rgba(76, 29, 149, 0.45);
+    border-radius: 12px;
+    box-shadow: inset 0 2px 6px rgba(76, 29, 149, 0.06);
+    padding: 16px;
+}
+.theme-global .card .card-body {
+    border: 2px solid rgba(239, 68, 68, 0.35);
+    border-radius: 12px;
+    box-shadow: inset 0 2px 6px rgba(239, 68, 68, 0.08);
+    padding: 16px;
+}
+
+.form-control,
+.form-select {
+    border-radius: 12px;
+    border: 1px solid #cbd5e1;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--brand-default);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+.animate-fade-in {
+    animation: fadeIn 280ms ease-in-out;
+}
+
+.animate-slide-up {
+    animation: slideUp 280ms ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) {
+    background-color: rgba(148, 163, 184, 0.06);
+}
+.table > tbody > tr + tr {
+    border-top: 14px solid #e5e7eb;
+}
+
+.badge {
+    border-radius: 999px;
+    padding: 6px 10px;
+}
+
+.shadow-soft {
+    box-shadow: var(--shadow);
+}
+
+/* Sidebar layout */
+.sidebar-col {
+    position: sticky;
+    top: 0;
+    height: calc(100vh - 0px);
+}
+.sidebar-shell {
+    background: #e9eef5;
+    border-radius: 12px;
+    padding: 12px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    overflow: hidden;
+    gap: 0;
+}
+.theme-dark .sidebar-shell {
+    background: #111827;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+.sidebar-shell .sidebar-nav-scroll {
+    flex: 0 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+    margin-bottom: 0;
+    margin-right: -4px;
+    min-height: 0;
+    max-height: 100%;
+}
+.sidebar-shell .sidebar-nav-scroll::-webkit-scrollbar {
+    width: 8px;
+}
+.sidebar-shell .sidebar-nav-scroll::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    margin: 4px 0;
+}
+.sidebar-shell .sidebar-nav-scroll::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+.sidebar-shell .sidebar-nav-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.35);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+.theme-dark .sidebar-shell .sidebar-nav-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.08);
+}
+.theme-dark .sidebar-shell .sidebar-nav-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+.theme-dark .sidebar-shell .sidebar-nav-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+.sidebar-shell .sidebar-footer {
+    margin-top: auto;
+    flex-shrink: 0;
+    padding-top: 12px;
+}
+.sidebar-toggle-hidden .sidebar-col {
+    display: none !important;
+}
+.sidebar-toggle-hidden .content-col {
+    width: 100%;
+}
+
+.role-accent {
+    color: var(--brand-default);
+}
+.theme-marketing .role-accent { color: var(--brand-marketing); }
+.theme-superadmin .role-accent { color: var(--brand-superadmin); }
+.theme-global .role-accent { color: var(--brand-global); }
+.theme-default .role-accent { color: var(--brand-default); }
+
+/* Superadmin nav emphasis */
+.superadmin-nav .list-group-item {
+    font-weight: 700;
+    font-size: 1.02rem;
+}
+
+/* Management dropdown styling */
+.management-card {
+    background: #ffffff;
+    color: #0f172a;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid #d1d5db;
+    padding-bottom: 4px;
+}
+.management-card .list-group-item {
+    background: #f8fafc;
+    color: #0f172a;
+    margin-bottom: 0;
+    border-radius: 0 !important;
+    border-bottom: 1px solid #e5e7eb;
+    transition: transform 120ms ease, box-shadow 120ms ease, background-color 120ms ease, color 120ms ease;
+    display: block;
+}
+.management-card .list-group-item:last-child {
+    border-bottom: none;
+}
+.management-card .list-group-item:hover {
+    background: #eef2ff;
+    transform: translateX(2px);
+    box-shadow: 0 8px 18px rgba(0,0,0,0.12);
+}
+.management-card .badge {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+.theme-marketing .management-card { background: #ffffff; }
+.theme-superadmin .management-card { background: #ffffff; }
+.theme-default .management-card { background: #ffffff; }
+.sidebar-management .list-group-item:nth-child(1),
+.sidebar-management .list-group-item:nth-child(2),
+.sidebar-management .list-group-item:nth-child(3),
+.sidebar-management .list-group-item:nth-child(4) {
+    background: #f8fafc;
+}
+.sidebar-management .list-group-item:hover {
+    color: #0f172a;
+    background: #eef2ff;
+    font-weight: 600;
+}
+
+/* Accent cards for a bolder, compact look */
+.accent-card {
+    border-radius: 16px;
+    color: #0f172a;
+    padding: 16px;
+    border: none;
+    box-shadow: var(--shadow);
+}
+.theme-marketing .accent-card { background: linear-gradient(135deg, #d1fae5, #a7f3d0); }
+.theme-superadmin .accent-card { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+.theme-default .accent-card { background: linear-gradient(135deg, #dbeafe, #bfdbfe); }
+.theme-dark .accent-card { background: linear-gradient(135deg, #1f2937, #0f172a); color: #e2e8f0; }

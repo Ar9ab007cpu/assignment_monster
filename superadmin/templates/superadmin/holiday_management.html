@@ -1,0 +1,81 @@
+{% extends "common/base.html" %}
+
+{% block page_title %}Holiday Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">Holiday Management</h2>
+        <p class="text-muted mb-0">Control blocked dates for deadlines.</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Add Holiday</h5>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        {{ form.date }}
+                        {% for error in form.date.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        {{ form.description }}
+                        {% for error in form.description.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% for error in form.non_field_errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                    <div class="text-end">
+                        <button class="btn btn-primary" type="submit">Add Holiday</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card shadow-sm h-100">
+            <div class="card-body table-responsive">
+                <h5 class="card-title mb-3">Upcoming Holidays</h5>
+                <table class="table table-striped align-middle">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for holiday in holidays %}
+                            <tr>
+                                <td>{{ holiday.date|date:"d M Y" }}</td>
+                                <td>{{ holiday.description|default:"-" }}</td>
+                                <td>
+                                    <form method="post" class="d-inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete">
+                                        <input type="hidden" name="holiday_id" value="{{ holiday.id }}">
+                                        <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No holidays configured.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

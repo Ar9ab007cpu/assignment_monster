@@ -1,0 +1,12 @@
+<div class="row g-3">
+    {% for stat in data.items %}
+        <div class="col-6 col-md-3">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body text-center">
+                    <p class="text-muted small mb-1">{{ stat.label }}</p>
+                    <h4 class="mb-0">{{ stat.value }}</h4>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>

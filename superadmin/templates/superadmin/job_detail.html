@@ -1,0 +1,109 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+
+{% block page_title %}Job Detail{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">{{ job.job_id_customer }} / {{ job.system_id }}</h2>
+        <p class="text-muted mb-0">Marketing Owner: {{ job.created_by.get_full_name }}</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" href="{% url 'superadmin:job_deadline_edit' job.pk %}">Edit Deadlines</a>
+        <a class="btn btn-outline-danger" href="{% url 'superadmin:job_delete' job.pk %}" data-confirm="Delete job {{ job.job_id_customer }} ({{ job.system_id }})? This cannot be undone.">Delete Job</a>
+        <a class="btn btn-outline-secondary" href="{% url 'superadmin:new_jobs' %}">Back to Jobs</a>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h5>Instruction</h5>
+        <p>{{ job.instruction|linebreaks }}</p>
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Expected Deadline:</strong> {{ job.expected_deadline|deadline }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Strict Deadline:</strong> {{ job.strict_deadline|deadline }}</p>
+            </div>
+        </div>
+        <p class="text-muted small mb-0">
+            Last edited: {{ job.updated_at|date:"d M Y, h:i A" }}{% if job.updated_by %} by {{ job.updated_by.get_full_name|default:job.updated_by.email }}{% endif %}
+        </p>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h5>Attachments</h5>
+        <ul class="mb-0">
+            {% for attachment in attachments %}
+                <li><a href="{{ attachment.file.url }}" target="_blank">{{ attachment.file.name }}</a></li>
+            {% empty %}
+                <li class="text-muted">No attachments uploaded.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<h4 class="mb-2">Generated Sections</h4>
+<div class="row g-3">
+    {% for section in sections %}
+        <div class="col-md-6">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>{{ section.get_section_type_display }}</span>
+                    {% if section.status == "approved" %}
+                        <span class="badge text-bg-success">{{ section.get_status_display }}</span>
+                    {% elif section.status == "regenerate" or section.status == "regenerated" %}
+                        <span class="badge text-bg-warning text-dark">{{ section.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge text-bg-secondary">{{ section.get_status_display }}</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-end mb-2">
+                        <button class="btn btn-sm btn-outline-primary toggle-section"
+                                type="button"
+                                data-target="section-{{ section.id }}"
+                                data-visible="false">
+                            View
+                        </button>
+                    </div>
+                    <div id="section-{{ section.id }}" class="section-content" hidden>
+                        <p>{{ section.content|default:"No content generated."|linebreaks }}</p>
+                    </div>
+                    <small class="text-muted">Super Admin view-only. Generation handled by Marketing.</small>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".toggle-section").forEach(function(btn) {
+        const targetId = btn.getAttribute("data-target");
+        const target = targetId ? document.getElementById(targetId) : null;
+        if (!target) return;
+        btn.addEventListener("click", function(event) {
+            event.preventDefault();
+            const isVisible = btn.getAttribute("data-visible") === "true";
+            if (isVisible) {
+                target.hidden = true;
+                btn.textContent = "View";
+                btn.setAttribute("data-visible", "false");
+            } else {
+                target.hidden = false;
+                btn.textContent = "Hide";
+                btn.setAttribute("data-visible", "true");
+            }
+        }, { passive: false });
+    });
+});
+</script>
+{% endblock %}

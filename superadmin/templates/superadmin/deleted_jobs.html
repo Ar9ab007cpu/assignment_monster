@@ -1,0 +1,58 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+
+{% block page_title %}Deleted Jobs{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+    <div>
+        <h2 class="mb-0">Deleted Jobs</h2>
+        <p class="text-muted mb-0">All jobs removed by Super Admin or Marketing.</p>
+    </div>
+    <form class="d-flex mt-3 mt-md-0" method="get" role="search">
+        <input type="search" class="form-control me-2" name="q" value="{{ search_query }}" placeholder="Search...">
+        <button class="btn btn-outline-primary" type="submit">Search</button>
+    </form>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body table-responsive">
+        <table class="table table-striped align-middle">
+            <thead>
+                <tr>
+                    <th>Deleted On</th>
+                    <th>Job ID</th>
+                    <th>System ID</th>
+                    <th>Marketing Owner</th>
+                    <th>Amount</th>
+                    <th>Reason</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                    <tr>
+                        <td>{{ job.deleted_at|date:"d M Y H:i" }}</td>
+                        <td>{{ job.job_id_customer }}</td>
+                        <td>{{ job.system_id }}</td>
+                        <td>{{ job.created_by.get_full_name }}</td>
+                        <td>{{ job.amount_inr|currency }}</td>
+                        <td>
+                            <div class="d-flex flex-column gap-1">
+                                <span>{{ job.deletion_notes|default:"-" }}</span>
+                                <form method="post" action="{% url 'superadmin:job_restore' job.pk %}">
+                                    {% csrf_token %}
+                                    <button class="btn btn-sm btn-outline-success" type="submit">Restore</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">No deleted jobs.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

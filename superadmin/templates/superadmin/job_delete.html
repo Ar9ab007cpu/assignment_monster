@@ -1,0 +1,30 @@
+{% extends "common/base.html" %}
+
+{% block page_title %}Delete Job{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h2>Delete Job {{ job.job_id_customer }}</h2>
+        <p class="text-muted">This will remove the job from all active views and notify the marketing owner.</p>
+        <dl class="row">
+            <dt class="col-sm-3">Marketing Owner</dt>
+            <dd class="col-sm-9">{{ job.created_by.get_full_name }}</dd>
+            <dt class="col-sm-3">System ID</dt>
+            <dd class="col-sm-9">{{ job.system_id }}</dd>
+            <dt class="col-sm-3">Amount</dt>
+            <dd class="col-sm-9">{{ job.amount_inr }}</dd>
+            <dt class="col-sm-3">Instruction</dt>
+            <dd class="col-sm-9">{{ job.instruction|linebreaks }}</dd>
+        </dl>
+        <form method="post" data-confirm="Delete job {{ job.job_id_customer }} ({{ job.system_id }})? This action cannot be undone.">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <div class="d-flex justify-content-end gap-2">
+                <a class="btn btn-secondary" href="{% url 'superadmin:all_jobs' %}">Cancel</a>
+                <button class="btn btn-danger" type="submit">Delete Job</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

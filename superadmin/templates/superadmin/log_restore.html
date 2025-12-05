@@ -1,0 +1,43 @@
+{% extends "common/base.html" %}
+{% block page_title %}Restore Logs{% endblock %}
+
+{% block content %}
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h2 class="mb-2">Restore Archived Logs</h2>
+        <p class="text-muted mb-3">Upload a CSV exported from the archive action to reinsert Activity or Error logs.</p>
+        <div class="d-flex gap-2 mb-3">
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'superadmin:activity_logs' %}?archive=1">Download Activity archive now</a>
+            <a class="btn btn-outline-secondary btn-sm" href="{% url 'superadmin:error_logs' %}?archive=1">Download Error archive now</a>
+        </div>
+        <form method="post" enctype="multipart/form-data" class="row g-3">
+            {% csrf_token %}
+            <div class="col-md-3">
+                <label class="form-label">Log type</label>
+                <select name="log_type" class="form-select" required>
+                    <option value="">Select type</option>
+                    <option value="activity">Activity Logs (archived/deleted)</option>
+                    <option value="error">Error Logs (archived/deleted)</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">CSV file</label>
+                <input type="file" name="file" accept=".csv,text/csv" class="form-control" required>
+            </div>
+            <div class="col-12">
+                <div class="alert alert-info small mb-2">
+                    <div class="fw-semibold">Expected columns</div>
+                    <ul class="mb-0">
+                        <li><strong>Activity:</strong> Timestamp, User, Role, Path, Method, Status, IP, Browser, Duration (ms), Action, Referrer</li>
+                        <li><strong>Error:</strong> Timestamp, User, Role, Path, Method, Status, Message, IP, Browser, Referrer, Resolved</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="col-12">
+                <button class="btn btn-primary" type="submit">Restore</button>
+                <a class="btn btn-outline-secondary" href="{% url 'superadmin:dashboard' %}">Back</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,177 @@
+{% extends "common/base.html" %}
+{% block page_title %}Monster Click{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-modal .modal-content {
+        background: #0b1220;
+        color: #e5e7eb;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .history-modal .analysis-output {
+        background: #0f172a;
+        color: #e5e7eb;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        max-height: 320px;
+        overflow-y: auto;
+    }
+    .history-modal .text-muted {
+        color: #cbd5e1 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 px-lg-3 mb-2">
+    <div class="alert alert-info shadow-sm mb-0" role="alert">
+        Cost: 10 gems per Monster generation.
+    </div>
+</div>
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h4 class="mb-0">Monster Click</h4>
+            {% include "common/components/gems_badge.html" with balance=gems_balance cost=monster_cost %}
+         </div>
+        <form method="post" enctype="multipart/form-data" class="generation-form">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label class="form-label">Instruction (required)</label>
+                <textarea class="form-control" name="instruction" rows="3" placeholder="Enter instruction..."></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Coupon code (optional)</label>
+                <input type="text" class="form-control" name="coupon_code" placeholder="Enter coupon code if any">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Attachments (optional, max 10)</label>
+                <input type="file" class="form-control" name="attachments" multiple>
+            </div>
+            <button class="btn btn-primary">Run Monster</button>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title">Latest Output</h5>
+        {% if monster_content %}
+            <div class="d-flex justify-content-end mb-2">
+                {% include "common/components/copy_button.html" with target="#monsterOutput" label="Copy Output" %}
+            </div>
+            <pre id="monsterOutput" class="analysis-output p-3 small" style="max-height: 320px; overflow-y: auto; white-space: pre-wrap;">{{ monster_content }}</pre>
+        {% else %}
+            <p class="text-muted mb-0">No output yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow-sm mt-3">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <h6 class="mb-0">Monster History</h6>
+        </div>
+        {% if history_page %}
+            <div class="table-responsive">
+                <table class="table table-dark table-striped table-sm align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th scope="col" style="width: 25%;">Date &amp; Time</th>
+                            <th scope="col">Instruction Preview</th>
+                            <th scope="col" class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in history_page %}
+                        <tr>
+                            <td class="fw-semibold">{{ item.created_at|date:"d M Y, h:i A" }}</td>
+                            <td class="text-muted">{{ item.instruction|truncatechars:120 }}</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-outline-light monster-history-link"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#monsterHistoryModal"
+                                        data-created="{{ item.created_at|date:'d M Y, h:i A' }}"
+                                        data-instruction="{{ item.instruction|escape }}"
+                                        data-result="{{ item.result|escape }}">
+                                    View
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <div class="small text-muted">Page {{ history_page_number }} of {{ history_total_pages }}</div>
+                <nav aria-label="Monster history pagination">
+                    <ul class="pagination pagination-sm mb-0">
+                        <li class="page-item {% if history_page_number <= 1 %}disabled{% endif %}">
+                            {% if history_page_number <= 1 %}
+                            <a class="page-link" href="#" tabindex="-1">Prev</a>
+                            {% else %}
+                            <a class="page-link" href="?hist_page={{ history_page_number|add:'-1' }}">Prev</a>
+                            {% endif %}
+                        </li>
+                        {% for p in history_page_numbers %}
+                        <li class="page-item {% if p == history_page_number %}active{% endif %}">
+                            <a class="page-link" href="?hist_page={{ p }}">{{ p }}</a>
+                        </li>
+                        {% endfor %}
+                        <li class="page-item {% if history_page_number >= history_total_pages %}disabled{% endif %}">
+                            {% if history_page_number >= history_total_pages %}
+                            <a class="page-link" href="#" tabindex="-1">Next</a>
+                            {% else %}
+                            <a class="page-link" href="?hist_page={{ history_page_number|add:'1' }}">Next</a>
+                            {% endif %}
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        {% else %}
+            <div class="text-muted small">No history yet.</div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal fade history-modal" id="monsterHistoryModal" tabindex="-1" aria-labelledby="monsterHistoryLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="monsterHistoryLabel">Monster Output</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 small text-muted">Generated on <span id="monsterHistoryCreated"></span></div>
+        <div class="mb-3">
+            <h6>Instruction</h6>
+            <pre class="analysis-output p-2 small" id="monsterHistoryInstruction" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto;"></pre>
+        </div>
+        <div>
+            <h6>Generated Content</h6>
+            <pre class="analysis-output p-2 small" id="monsterHistoryResult" style="white-space: pre-wrap; max-height: 320px; overflow-y: auto;"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const modal = document.getElementById("monsterHistoryModal");
+    if (!modal) return;
+    modal.addEventListener("show.bs.modal", function (event) {
+        const trigger = event.relatedTarget;
+        if (!trigger) return;
+        modal.querySelector("#monsterHistoryCreated").textContent = trigger.getAttribute("data-created") || "";
+        modal.querySelector("#monsterHistoryInstruction").textContent = trigger.getAttribute("data-instruction") || "";
+        modal.querySelector("#monsterHistoryResult").textContent = trigger.getAttribute("data-result") || "";
+    });
+});
+</script>
+{% endblock %}

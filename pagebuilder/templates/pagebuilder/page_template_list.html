@@ -1,0 +1,95 @@
+{% extends "common/base.html" %}
+
+{% block page_title %}Page Builder{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h4 mb-0">Page Builder</h1>
+        <p class="text-muted mb-0">Manage page templates, blocks, themes, and animations.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-primary" href="{% url 'pagebuilder:theme_create' %}">New Theme</a>
+        <a class="btn btn-outline-secondary" href="{% url 'pagebuilder:animation_create' %}">New Animation</a>
+    </div>
+</div>
+
+<div class="card mb-3 shadow-sm">
+    <div class="card-body">
+        <h5 class="mb-3">Page Templates</h5>
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Slug</th>
+                        <th>Name</th>
+                        <th>Theme</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for tmpl in templates %}
+                        <tr>
+                            <td><code>{{ tmpl.slug }}</code></td>
+                            <td>{{ tmpl.name }}</td>
+                            <td>{{ tmpl.theme|default:"-" }}</td>
+                            <td>
+                                <span class="badge {% if tmpl.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                                    {% if tmpl.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" href="{% url 'pagebuilder:edit_template' tmpl.pk %}">Edit</a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No templates defined yet.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="mb-3">Themes</h5>
+                <ul class="list-group list-group-flush">
+                    {% for theme in themes %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{{ theme.name }}</span>
+                            <span class="badge {% if theme.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}">
+                                {% if theme.is_active %}Active{% else %}Inactive{% endif %}
+                            </span>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">No themes yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="mb-3">Animation Presets</h5>
+                <ul class="list-group list-group-flush">
+                    {% for anim in animations %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>{{ anim.name }}</span>
+                            <code class="small">{{ anim.css_class }}</code>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">No animations yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

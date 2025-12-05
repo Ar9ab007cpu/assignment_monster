@@ -1,0 +1,359 @@
+{% extends "common/base.html" %}
+{% block page_title %}Global Home{% endblock %}
+
+{% block extra_css %}
+<style>
+    .global-hero {
+        background: linear-gradient(135deg, #f8fafc, #fdf2ff);
+        color: #0f172a;
+        border: 1px solid rgba(248, 113, 113, 0.35);
+        min-height: 100%;
+        overflow: hidden;
+        position: relative;
+    }
+    body.theme-dark .global-hero {
+        background: linear-gradient(135deg, #111827, #312e81);
+        color: #f8fafc;
+        border-color: rgba(248, 113, 113, 0.35);
+    }
+    body.theme-dark .hero-title {
+        color: #f8fafc;
+    }
+    body.theme-dark .hero-subtitle {
+        color: #c7d2fe;
+    }
+    body.theme-dark .hero-metric {
+        background: rgba(15,23,42,0.7);
+        border-color: rgba(248,113,113,0.35);
+        box-shadow: none;
+    }
+    body.theme-dark .hero-metric__label {
+        color: #cbd5f5;
+    }
+    body.theme-dark .hero-metric__value {
+        color: #fff;
+    }
+    .hero-eyebrow {
+        letter-spacing: 3px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        opacity: 0.55;
+    }
+    .hero-title {
+        font-size: 1.85rem;
+        font-weight: 800;
+        color: #1f2937;
+    }
+    .hero-subtitle {
+        opacity: 0.8;
+        color: #475569;
+    }
+    .hero-chip {
+        background: rgba(124, 58, 237, 0.1);
+        border-radius: 999px;
+        padding: 0.15rem 0.85rem;
+        font-size: 0.8rem;
+    }
+    .hero-metric {
+        background: #fff;
+        border-radius: 1rem;
+        padding: 0.85rem 1.1rem;
+        border: 1px solid rgba(248, 113, 113, 0.35);
+        box-shadow: 0 10px 20px rgba(248,113,113,0.15);
+    }
+    .hero-metric__label {
+        font-size: 0.75rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        opacity: 0.6;
+        color: #64748b;
+    }
+    .hero-metric__value {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .hero-cta {
+        border-radius: 999px;
+        font-weight: 600;
+        background: linear-gradient(135deg, #7c3aed, #d946ef);
+        border: none;
+        color: #fff;
+        box-shadow: 0 10px 18px rgba(124, 58, 237, 0.25);
+    }
+    .profile-list li {
+        border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+        padding: 0.45rem 0;
+    }
+    .profile-list li:last-child {
+        border-bottom: none;
+    }
+    .profile-avatar {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+        margin-bottom: 1rem;
+    }
+    .generation-card {
+        background: #fff;
+        border: 1px solid rgba(248, 113, 113, 0.35);
+        border-radius: 1rem;
+        padding: 1.25rem;
+        height: 100%;
+        box-shadow: 0 15px 20px rgba(248, 113, 113, 0.12);
+    }
+    body.theme-dark .generation-card {
+        background: rgba(15,23,42,0.9);
+        border-color: rgba(248,113,113,0.35);
+        box-shadow: none;
+    }
+    .generation-card__label {
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-size: 0.78rem;
+        color: #6b7280;
+    }
+    body.theme-dark .generation-card__label {
+        color: #a5b4fc;
+    }
+    .generation-card__value {
+        font-size: 2rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+    body.theme-dark .generation-card__value {
+        color: #f8fafc;
+    }
+    .generation-card__icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: rgba(124, 58, 237, 0.15);
+        color: #7c3aed;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        margin-bottom: 0.75rem;
+    }
+    body.theme-dark .generation-card__icon {
+        background: rgba(124, 58, 237, 0.2);
+        color: #c4b5fd;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row g-3 align-items-stretch">
+    <div class="col-xl-5">
+        <div class="card global-hero shadow-sm h-100">
+            <div class="card-body position-relative">
+                <p class="hero-eyebrow mb-1">Assignment Monster HQ</p>
+                <h2 class="hero-title mb-1">Welcome back, {{ dashboard_user.first_name|default:dashboard_user.get_full_name|default:dashboard_user.email }}</h2>
+                {# Subtitle removed per request #}
+                <div class="d-inline-flex align-items-center gap-2 mb-3"
+                     data-bs-toggle="tooltip"
+                     data-bs-placement="right"
+                     title="Need more gems? Email marketing@technotonics.org">
+                    {% include "common/components/gems_badge.html" with balance=gems_balance %}
+                </div>
+                <div class="row gy-3">
+                    <div class="col-6">
+                        <div class="hero-metric">
+                            <div class="hero-metric__label">Current balance</div>
+                            <div class="hero-metric__value">{{ gems_balance|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="hero-metric">
+                            <div class="hero-metric__label">Lifetime spend</div>
+                            <div class="hero-metric__value">{{ gems_spent_total|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="hero-metric">
+                            <div class="hero-metric__label">Total monster click</div>
+                            <div class="hero-metric__value">{{ recent_jobs }}</div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="hero-metric">
+                            <div class="hero-metric__label">Workspace status</div>
+                            <div class="hero-metric__value">Active</div>
+                        </div>
+                    </div>
+                </div>
+                <a class="btn btn-light btn-sm mt-4 hero-cta" href="{% url 'marketing:global_history' %}">
+                    View Gems History
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-xl-7">
+        <div class="row g-3 h-100">
+            <div class="col-md-4">
+                <div class="generation-card shadow-sm">
+                    <div class="generation-card__icon"><i class="fa-solid fa-scroll"></i></div>
+                    <div class="generation-card__label">Total summaries generated</div>
+                    <div class="generation-card__value">{{ summary_generated_total|default:0 }}</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="generation-card shadow-sm">
+                    <div class="generation-card__icon"><i class="fa-solid fa-diagram-project"></i></div>
+                    <div class="generation-card__label">Total structures generated</div>
+                    <div class="generation-card__value">{{ structure_generated_total|default:0 }}</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="generation-card shadow-sm">
+                    <div class="generation-card__icon"><i class="fa-solid fa-file-lines"></i></div>
+                    <div class="generation-card__label">Total words generated</div>
+                    <div class="generation-card__value">{{ content_words_total|default:0 }}</div>
+                    <div class="text-muted small mt-1">from content sections</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-1">
+    <div class="col-12">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="mb-0">Profile Snapshot</h5>
+                        <small class="text-muted">Global profile details you can manage</small>
+                    </div>
+                    <a class="btn btn-outline-primary btn-sm" href="{% url 'marketing:global_profile_edit' %}">Edit Profile</a>
+                </div>
+                <div class="row gy-3 align-items-center">
+                    <div class="col-md-4">
+                        <div class="d-flex flex-column align-items-center">
+                        {% if dashboard_user.profile_picture %}
+                            <img src="{{ dashboard_user.profile_picture.url }}" alt="Profile picture" class="img-fluid rounded-3 shadow-sm" style="width:130px; height:130px; object-fit:cover;">
+                        {% else %}
+                            <div class="rounded-3 bg-gradient shadow-sm d-inline-flex align-items-center justify-content-center text-white fw-bold" style="width:130px; height:130px; background:linear-gradient(135deg,#7c3aed,#d946ef); font-size:2.4rem;">
+                                {{ dashboard_user.get_full_name|default:dashboard_user.email|slice:":2"|upper }}
+                            </div>
+                        {% endif %}
+                        <div class="mt-2 text-center">
+                            <div class="fw-semibold">{{ dashboard_user.get_full_name|default:dashboard_user.email }}</div>
+                            <div class="text-muted small">{{ dashboard_user.email }}</div>
+                        </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="row">
+                            <div class="col-sm-6 mb-3">
+                                <div class="text-muted small text-uppercase">User ID</div>
+                                <div class="fw-semibold">{{ dashboard_user.employee_id|default:dashboard_user.id }}</div>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <div class="text-muted small text-uppercase">Joined</div>
+                                <div class="fw-semibold">{{ dashboard_user.date_joined|date:"d M Y" }}</div>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <div class="text-muted small text-uppercase">Email</div>
+                                <div class="fw-semibold text-truncate">{{ dashboard_user.email }}</div>
+                            </div>
+                            <div class="col-sm-6 mb-3">
+                                <div class="text-muted small text-uppercase">Last Login</div>
+                                <div class="fw-semibold">
+                                    {% if dashboard_user.last_login %}
+                                        {{ dashboard_user.last_login|date:"d M Y, h:i A" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+<div class="alert alert-info small mb-0">
+                            You can update your preferred name and profile photo anytime using the Edit Profile button.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if gem_rates %}
+<div class="row g-3 mt-1">
+    <div class="col-12">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h5 class="mb-0">Gem Converter</h5>
+                        <small class="text-muted">Convert gems to your currency (rates refresh daily at 12:00 a.m.).</small>
+                    </div>
+                </div>
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-4">
+                        <label class="form-label small">Gems</label>
+                        <input type="number" min="0" value="1" step="1" class="form-control" id="gemConverterAmount">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small">Currency</label>
+                        <select class="form-select" id="gemConverterCurrency">
+                            {% for curr in gem_rates.currencies %}
+                            <option value="{{ curr }}" {% if curr == "INR" %}selected{% endif %}>{{ curr }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-label small">Converted</div>
+                        <div class="h5 mb-0 text-success" id="gemConverterResult">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{# Charts removed for global home per request #}
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% if gem_rates %}
+{{ gem_rates.prices|json_script:"gem-prices-data" }}
+<script>
+(function() {
+    const amountInput = document.getElementById("gemConverterAmount");
+    const currencySelect = document.getElementById("gemConverterCurrency");
+    const resultEl = document.getElementById("gemConverterResult");
+    function update() {
+        const dataNode = document.getElementById("gem-prices-data");
+        const prices = dataNode ? JSON.parse(dataNode.textContent || "{}") : {};
+        const amt = parseFloat(amountInput.value || "0");
+        const curr = currencySelect.value;
+        const price = parseFloat(prices[curr] || "0");
+        if (!isNaN(amt) && !isNaN(price)) {
+            resultEl.textContent = `${curr} ${(amt * price).toFixed(2)}`;
+        } else {
+            resultEl.textContent = "-";
+        }
+    }
+    if (amountInput && currencySelect && resultEl) {
+        amountInput.addEventListener("input", update);
+        currencySelect.addEventListener("change", update);
+        update();
+    }
+})();
+</script>
+{% endif %}
+{% endblock %}

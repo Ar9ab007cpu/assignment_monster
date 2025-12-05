@@ -1,0 +1,41 @@
+{% extends "common/base.html" %}
+
+{% block page_title %}Form Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">Form Management</h2>
+        <p class="text-muted mb-0">Manage all forms and their role-based visibility.</p>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="list-group">
+            {% for form in forms %}
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <a class="text-decoration-none" href="{% url 'superadmin:form_management' form.slug %}">
+                        <strong>{{ form.name }}</strong>
+                        <div class="text-muted small">{{ form.description }}</div>
+                    </a>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge {% if form.is_active %}bg-success{% else %}bg-secondary{% endif %}">
+                            {% if form.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                        <form method="post" class="mb-0">
+                            {% csrf_token %}
+                            <input type="hidden" name="form_id" value="{{ form.id }}">
+                            <button type="submit" class="btn btn-sm {% if form.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                                {% if form.is_active %}Deactivate{% else %}Activate{% endif %}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="list-group-item text-muted">No forms found.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

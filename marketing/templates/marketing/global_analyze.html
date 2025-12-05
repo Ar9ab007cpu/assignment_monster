@@ -1,0 +1,212 @@
+{% extends "common/base.html" %}
+{% block page_title %}Analyze{% endblock %}
+
+{% block extra_css %}
+<style>
+    .analysis-output {
+        background: #f8fafc;
+        color: #0f172a;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        border-radius: 12px;
+        white-space: pre-wrap;
+    }
+    body.theme-global .analysis-output,
+    body.theme-marketing .analysis-output,
+    body.theme-superadmin .analysis-output {
+        background: #111827;
+        color: #e5e7eb;
+        border-color: rgba(255, 255, 255, 0.12);
+    }
+    /* Keep modal output readable in both themes */
+    .modal .analysis-output {
+        background: #0f172a;
+        color: #e5e7eb;
+        border-color: rgba(255, 255, 255, 0.2);
+    }
+    /* Modal header/body text for dark mode */
+    .modal-content {
+        background: #0b1220;
+        color: #e5e7eb;
+    }
+    .modal-content .text-muted {
+        color: #cbd5e1 !important;
+    }
+    .modal-title,
+    .modal-content h6 {
+        color: #e5e7eb;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0 px-lg-3 mb-2">
+    <div class="alert alert-info shadow-sm mb-0" role="alert">
+        Cost: {{ summary_cost }} gems for each summary generation on this page.
+    </div>
+</div>
+<div class="d-flex justify-content-end mb-3">
+    {% include "common/components/gems_badge.html" with balance=gems_balance cost=summary_cost %}
+</div>
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="card-title">Analyze Document</h5>
+                <p class="text-muted small">Provide an instruction (required). Attach up to 10 files if you have them.</p>
+                <form method="post" enctype="multipart/form-data" class="generation-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Coupon Code (optional)</label>
+                        <input type="text" class="form-control" name="coupon_code" placeholder="Enter coupon code to redeem">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Instruction*</label>
+                        <textarea class="form-control" name="instruction" rows="4" placeholder="Describe what you need analyzed or written..."></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Attachments (optional, max 10)</label>
+                        <input type="file" class="form-control" name="attachments" multiple>
+                        <div class="form-text">PDF, DOCX • Max 100MB each.</div>
+                    </div>
+                    <button class="btn btn-primary w-100">Analyze Document</button>
+                    <div class="mt-2 small text-muted">Cost: Summary {{ summary_cost }} gems (first run). Remaining balance: {{ gems_balance }}</div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="card-title mb-0">Generated Summary</h5>
+                    {% if result %}
+                        {% include "common/components/copy_button.html" with target="#analyzeOutput" label="Copy Output" %}
+                    {% endif %}
+                </div>
+                {% if result %}
+                    <div class="alert alert-success py-2">Deducted {{ deducted }} gems. New balance: {{ new_balance }}.</div>
+                    <pre id="analyzeOutput" class="analysis-output p-3 small" style="white-space: pre-wrap; max-height: 320px; overflow-y: auto;">{{ result }}</pre>
+                {% else %}
+                    <div class="text-muted small">Run an analysis to see the summary here.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mt-3">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h6 class="mb-0">Recent Analyze History</h6>
+                </div>
+                {% if history_page %}
+                    <div class="table-responsive">
+                        <table class="table table-dark table-striped table-sm align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col" style="width: 25%;">Date &amp; Time</th>
+                                    <th scope="col">Instruction Preview</th>
+                                    <th scope="col" class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in history_page %}
+                                <tr>
+                                    <td class="fw-semibold">{{ item.created_at|date:"d M Y, h:i A" }}</td>
+                                    <td class="text-muted">{{ item.instruction|truncatechars:120 }}</td>
+                                    <td class="text-end">
+                                        <button class="btn btn-sm btn-outline-light history-link"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#historyModal"
+                                                data-created="{{ item.created_at|date:'d M Y, h:i A' }}"
+                                                data-instruction="{{ item.instruction|escape }}"
+                                                data-result="{{ item.result|escape }}">
+                                            View
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <div class="small text-muted">
+                            Page {{ history_page_number }} of {{ history_total_pages }}
+                        </div>
+                        <nav aria-label="History pagination">
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item {% if history_page_number <= 1 %}disabled{% endif %}">
+                                    {% if history_page_number <= 1 %}
+                                    <a class="page-link" href="#" tabindex="-1">Prev</a>
+                                    {% else %}
+                                    <a class="page-link" href="?hist_page={{ history_page_number|add:'-1' }}">Prev</a>
+                                    {% endif %}
+                                </li>
+                                {% for p in history_page_numbers %}
+                                <li class="page-item {% if p == history_page_number %}active{% endif %}">
+                                    <a class="page-link" href="?hist_page={{ p }}">{{ p }}</a>
+                                </li>
+                                {% endfor %}
+                                <li class="page-item {% if history_page_number >= history_total_pages %}disabled{% endif %}">
+                                    {% if history_page_number >= history_total_pages %}
+                                    <a class="page-link" href="#" tabindex="-1">Next</a>
+                                    {% else %}
+                                    <a class="page-link" href="?hist_page={{ history_page_number|add:'1' }}">Next</a>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                {% else %}
+                    <div class="text-muted small">No history yet. Run an analysis to start building your history.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="historyModalLabel">Analysis Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-2 small text-muted" id="historyCreatedAt"></div>
+        <div class="mb-3">
+            <h6>Instruction</h6>
+            <pre class="analysis-output p-2 small" id="historyInstruction" style="white-space: pre-wrap;"></pre>
+        </div>
+        <div>
+            <h6>Result</h6>
+            <pre class="analysis-output p-2 small" id="historyResult" style="white-space: pre-wrap;"></pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const modal = document.getElementById('historyModal');
+    if (!modal) return;
+    modal.addEventListener('show.bs.modal', function (event) {
+        const link = event.relatedTarget;
+        if (!link) return;
+        modal.querySelector('#historyCreatedAt').textContent = link.getAttribute('data-created') || '';
+        modal.querySelector('#historyInstruction').textContent = link.getAttribute('data-instruction') || '';
+        modal.querySelector('#historyResult').textContent = link.getAttribute('data-result') || '';
+    });
+});
+</script>
+{% endblock %}

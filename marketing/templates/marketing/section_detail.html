@@ -1,0 +1,131 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+{% block page_title %}{{ section_label }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">{{ section_label }}</h2>
+        <p class="text-muted mb-0">{{ job.job_id_customer }} / {{ job.system_id }}</p>
+    </div>
+    {% if user.role == user.Role.GLOBAL %}
+    <div class="card shadow-sm px-3 py-2 align-items-center d-flex flex-row gap-3">
+        <div class="fw-semibold text-danger">Gems</div>
+        <div class="h4 mb-0">{{ gems_balance|default:"0" }}</div>
+        {% if section_cost %}<span class="badge bg-warning text-dark">Cost: {{ section_cost }} (first generate)</span>{% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h5>Instructions</h5>
+        <p>{{ job.instruction|linebreaks }}</p>
+        <h6 class="mt-3">Attachments</h6>
+        <ul class="mb-0">
+            {% for attachment in attachments %}
+                <li><a href="{{ attachment.file.url }}" target="_blank">{{ attachment.file.name }}</a></li>
+            {% empty %}
+                <li class="text-muted">No attachments uploaded.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="d-flex gap-2">
+                <form method="post" action="{% url 'marketing:section_action' %}" class="d-flex gap-2 align-items-center section-form generation-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="section_id" value="{{ section_obj.id }}">
+                    <input type="hidden" name="action" value="regenerate">
+                    <button type="submit" class="btn btn-warning btn-sm" {% if section_obj.status == 'approved' or not section_obj.can_regenerate %}disabled{% endif %}>
+                        {% if section_obj.regeneration_count > 0 %}Regenerate{% else %}Generate{% endif %}
+                        <span class="badge bg-dark ms-1">{{ section_obj.regeneration_count|default:0 }}/3</span>
+                    </button>
+                </form>
+                <form method="post" action="{% url 'marketing:section_action' %}" class="section-form generation-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="section_id" value="{{ section_obj.id }}">
+                    <input type="hidden" name="action" value="approve">
+                    <button type="submit" class="btn btn-success btn-sm" {% if section_obj.status == 'approved' %}disabled{% endif %}>Approve</button>
+                </form>
+            </div>
+            {% if user.role == user.Role.GLOBAL %}
+            <form method="post" action="{% url 'marketing:section_action' %}" class="generation-form">
+                {% csrf_token %}
+                <input type="hidden" name="section_id" value="{{ section_obj.id }}">
+                <input type="hidden" name="action" value="monster">
+                <button type="submit" class="btn btn-outline-danger btn-sm">Monster Click (10 gems)</button>
+            </form>
+            {% endif %}
+        </div>
+        {% if section_obj.history_display %}
+        <div class="mb-2 d-flex gap-2 flex-wrap">
+            {% for h in section_obj.history_display %}
+                <button type="button"
+                        class="history-link btn btn-sm {% if h.approved %}btn-success{% else %}btn-outline-secondary{% endif %}"
+                        data-target="hist-{{ section_obj.id }}-{{ forloop.counter0 }}">
+                    {% if forloop.last %}Approved{% else %}{{ forloop.counter }}{% endif %}
+                </button>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <div class="border rounded p-2" id="section-{{ section_obj.id }}">
+            {% for h in section_obj.history_display %}
+                <div id="hist-{{ section_obj.id }}-{{ forloop.counter0 }}" class="history-entry" {% if not forloop.first %}style="display:none"{% endif %}>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <span class="badge bg-secondary">{{ h.action|title }}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="text-muted">{% if h.created_at %}{{ h.created_at|date:"d M Y, h:i A" }}{% endif %}</span>
+                            {% include "common/components/copy_button.html" with target="#hist-content-{{ section_obj.id }}-{{ forloop.counter0 }}" label="Copy" %}
+                        </div>
+                    </div>
+                    <div class="mt-1" id="hist-content-{{ section_obj.id }}-{{ forloop.counter0 }}">{{ h.content|default:"No content generated."|linebreaks }}</div>
+                </div>
+            {% endfor %}
+            {% if not section_obj.history_display %}
+                <div class="text-muted small">No content generated.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".generation-form").forEach(function(form) {
+        form.addEventListener("submit", function() {
+            const btn = form.querySelector("button[type='submit']");
+            if (btn) {
+                btn.dataset.originalText = btn.textContent;
+                btn.textContent = "Processing...";
+                btn.disabled = true;
+            }
+        });
+    });
+    document.querySelectorAll(".history-link").forEach(function(link) {
+        link.addEventListener("click", function(e) {
+            e.preventDefault();
+            const targetId = link.getAttribute("data-target");
+            if (!targetId) return;
+            document.querySelectorAll(".history-entry").forEach(function(entry) {
+                entry.style.display = entry.id === targetId ? "block" : "none";
+            });
+            document.querySelectorAll(".history-link").forEach(function(btn) {
+                if (btn.getAttribute("data-target") === targetId) {
+                    btn.classList.remove("btn-outline-secondary");
+                    btn.classList.add("btn-primary");
+                } else if (!btn.classList.contains("btn-success")) {
+                    btn.classList.remove("btn-primary");
+                    btn.classList.add("btn-outline-secondary");
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

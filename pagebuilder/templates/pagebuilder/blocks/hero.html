@@ -1,0 +1,21 @@
+<div class="p-4 rounded-4 shadow-sm" style="background: {{ style.background|default:'var(--pb-bg, #f8f9fa)' }};">
+    {% if data.headline or data.subhead or data.buttons %}
+        {% if data.headline %}
+            <h2 class="mb-2" style="color: {{ style.headline_color|default:'var(--pb-primary, #0d6efd)' }};">{{ data.headline }}</h2>
+        {% endif %}
+        {% if data.subhead %}
+            <p class="text-muted mb-3">{{ data.subhead }}</p>
+        {% endif %}
+        {% if data.buttons %}
+            <div class="d-flex flex-wrap gap-2">
+                {% for button in data.buttons %}
+                    <a class="btn btn-{% if button.variant %}{{ button.variant }}{% else %}primary{% endif %}" href="{{ button.href|default:'#' }}">
+                        {{ button.label }}
+                    </a>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="text-muted fst-italic">Hero block has no content configured. Add a headline/subhead/buttons in Page Builder.</div>
+    {% endif %}
+</div>

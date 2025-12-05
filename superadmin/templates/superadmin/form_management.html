@@ -1,0 +1,75 @@
+{% extends "common/base.html" %}
+
+{% block page_title %}Form Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-0">{{ definition.name }}</h2>
+        <p class="text-muted mb-0">{{ definition.description }}</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{% url 'superadmin:form_management_list' %}">Back to Forms</a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="post">
+            {% csrf_token %}
+            <div class="table-responsive">
+                <table class="table table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Field / Name</th>
+                            <th>Target</th>
+                            <th>Type</th>
+                            <th>Order</th>
+                            <th>Visible (Roles)</th>
+                            <th>Required (Roles)</th>
+                            <th>Read-only</th>
+                            <th>Active</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{ formset.management_form }}
+                        {% for form in formset %}
+                            <tr>
+                                <td>
+                                    {{ form.label }}
+                                    <small class="text-muted d-block">{{ form.name }}</small>
+                                    {% for error in form.non_field_errors %}
+                                        <div class="text-danger small">{{ error }}</div>
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    {{ form.target_field }}
+                                </td>
+                                <td>
+                                    {{ form.field_type }}
+                                </td>
+                                <td style="width: 100px;">
+                                    {{ form.order }}
+                                </td>
+                                <td>
+                                    {{ form.visible_roles }}
+                                </td>
+                                <td>
+                                    {{ form.required_roles }}
+                                </td>
+                                <td>
+                                    {{ form.read_only_roles }}
+                                </td>
+                                <td>
+                                    {{ form.is_active }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="text-end">
+                <button class="btn btn-primary" type="submit">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

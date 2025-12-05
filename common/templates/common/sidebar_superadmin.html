@@ -1,0 +1,68 @@
+{% load nav_extras %}
+<div class="sidebar-shell">
+    <div class="list-group shadow-sm mb-3 animate-fade-in superadmin-nav sidebar-nav">
+        {# Primary nav items from configuration #}
+        {% if general %}
+            {% for item in general %}
+                {% url item.url_name as nav_url %}
+                {% if item.url_name == "accounts:logout" or item.label|lower == "logout" %}
+                    {# skip; footer handles sign out #}
+                {% else %}
+                    <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class item.url_name %}" href="{{ nav_url }}">
+                        <span>{% include "common/sidebar_icon.html" with label=item.label %} {{ item.label }}</span>
+                        {% if item.badge_key %}
+                            {% nav_badge nav_counts item.badge_key as count %}
+                            {% if count %}
+                                <span class="badge text-bg-danger">{{ count }}</span>
+                            {% endif %}
+                        {% endif %}
+                    </a>
+                {% endif %}
+            {% endfor %}
+        {% else %}
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'superadmin:welcome' %}" href="{% url 'superadmin:welcome' %}">
+                <span>{% include "common/sidebar_icon.html" with label="Home" %} Home</span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'superadmin:dashboard' %}" href="{% url 'superadmin:dashboard' %}">
+                <span>{% include "common/sidebar_icon.html" with label="Dashboard" %} Dashboard</span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'superadmin:all_jobs' %}" href="{% url 'superadmin:all_jobs' %}">
+                <span>{% include "common/sidebar_icon.html" with label="All Jobs" %} All Jobs</span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'superadmin:new_jobs' %}" href="{% url 'superadmin:new_jobs' %}">
+                <span>{% include "common/sidebar_icon.html" with label="New Job" %} New Jobs</span>
+                {% nav_badge nav_counts "superadmin.new_jobs" as new_jobs_count %}
+                {% if new_jobs_count %}
+                    <span class="badge text-bg-danger">{{ new_jobs_count }}</span>
+                {% endif %}
+            </a>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'superadmin:deleted_jobs' %}" href="{% url 'superadmin:deleted_jobs' %}">
+                <span>{% include "common/sidebar_icon.html" with label="Deleted Jobs" %} Deleted Jobs</span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'superadmin:user_approval' %}" href="{% url 'superadmin:user_approval' %}">
+                <span>{% include "common/sidebar_icon.html" with label="User Approval" %} User Approval</span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'superadmin:profile_update_requests' %}" href="{% url 'superadmin:profile_update_requests' %}">
+                <span>{% include "common/sidebar_icon.html" with label="Profile Update Request" %} Profile Update Requests</span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'tickets:admin_history' %}" href="{% url 'tickets:admin_history' %}">
+                <span>{% include "common/sidebar_icon.html" with label="Ticket Management" %} Ticket Management</span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'superadmin:profile' %}" href="{% url 'superadmin:profile' %}">
+                <span>{% include "common/sidebar_icon.html" with label="Profile" %} Profile</span>
+            </a>
+            <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center {% nav_active_class 'superadmin:user_activity' %}" href="{% url 'superadmin:user_activity' %}">
+                <span>{% include "common/sidebar_icon.html" with label="Activity" %} User Activity</span>
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="card shadow-sm management-card animate-slide-up">
+        <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center text-center {% nav_active_class 'superadmin:management_hub' %}" href="{% url 'superadmin:management_hub' %}">
+            <span class="fw-semibold flex-grow-1 text-wrap" style="white-space: normal;">Management &amp; System Control</span>
+            <i class="fa-solid fa-chevron-right text-muted ms-2"></i>
+        </a>
+    </div>
+
+    {# Sign Out button removed per request #}
+</div>

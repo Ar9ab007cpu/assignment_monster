@@ -1,0 +1,29 @@
+{% extends "common/base.html" %}
+
+{% block page_title %}Create Job{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h2 class="mb-4">Job Drop Form</h2>
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {% for field in form.visible_fields %}
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <small class="text-muted d-block">{{ field.help_text }}</small>
+                            {% endif %}
+                            {{ field.errors }}
+                        </div>
+                    {% endfor %}
+                    <button class="btn btn-success w-100" type="submit">Submit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends "common/base.html" %}
+
+{% block page_title %}Marketing Welcome{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+        <h1 class="display-6 mb-0">Welcome, {{ user.get_full_name|default:user.email }}</h1>
+        <p class="text-muted mb-0">Review KPIs or drop a new job to keep the pipeline moving.</p>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        {% include "common/components/cards_stats.html" with cards=cards %}
+        <form method="get" class="row g-2 align-items-end mt-2 mb-3">
+            <div class="col-12 col-md-4">
+                <label class="form-label">From</label>
+                <input type="date" class="form-control" name="start" value="{{ start_date }}">
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label">To</label>
+                <input type="date" class="form-control" name="end" value="{{ end_date }}">
+            </div>
+            <div class="col-12 col-md-4">
+                <button class="btn btn-primary w-100" type="submit">Apply</button>
+            </div>
+        </form>
+        <div class="row g-3">
+            <div class="col-12 col-lg-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted text-uppercase mb-2">Jobs per day</h6>
+                        <canvas id="chart-jobs" height="160"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-lg-6">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h6 class="text-muted text-uppercase mb-2">Amount per day</h6>
+                        <canvas id="chart-amounts" height="160"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{ chart_data|json_script:"marketing-chart-data" }}
+        <p class="text-muted small mb-0 mt-3">Updated: {% now "d M Y H:i" %}</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+(function() {
+    const renderCharts = () => {
+        const payload = document.getElementById("marketing-chart-data");
+        if (!payload || typeof Chart === "undefined") return;
+        const data = JSON.parse(payload.textContent || "{}");
+
+        const jobsCtx = document.getElementById("chart-jobs");
+        const amtCtx = document.getElementById("chart-amounts");
+
+        const commonOpts = {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        };
+
+        try {
+            if (jobsCtx) {
+                new Chart(jobsCtx, {
+                    type: "line",
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [{
+                            label: "Jobs",
+                            data: data.counts || [],
+                            borderColor: "#2563eb",
+                            backgroundColor: "rgba(37,99,235,0.12)",
+                            tension: 0.25,
+                            fill: true
+                        }]
+                    },
+                    options: commonOpts
+                });
+            }
+            if (amtCtx) {
+                new Chart(amtCtx, {
+                    type: "line",
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [{
+                            label: "Amount",
+                            data: data.amounts || [],
+                            borderColor: "#16a34a",
+                            backgroundColor: "rgba(22,163,74,0.12)",
+                            tension: 0.25,
+                            fill: true
+                        }]
+                    },
+                    options: commonOpts
+                });
+            }
+        } catch (err) {
+            console.error("Chart render failed", err);
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(renderCharts, 0);
+    });
+    window.addEventListener("pageshow", () => {
+        setTimeout(renderCharts, 0);
+    });
+})();
+</script>
+{% endblock %}

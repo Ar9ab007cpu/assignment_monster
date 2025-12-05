@@ -1,0 +1,35 @@
+{% extends "common/base.html" %}
+{% block page_title %}Notices{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Notices</h3>
+    <span class="text-muted small">Latest system updates for global users</span>
+</div>
+
+{% if notices %}
+    <div class="row g-3">
+        {% for notice in notices %}
+            <div class="col-12">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h5 class="card-title mb-1">{{ notice.title }}</h5>
+                                <div class="small text-muted">
+                                    {% if notice.start_at %}From {{ notice.start_at|date:"d M Y, H:i" }}{% endif %}
+                                    {% if notice.end_at %}<br>Until {{ notice.end_at|date:"d M Y, H:i" }}{% endif %}
+                                </div>
+                            </div>
+                            <span class="badge text-bg-info text-dark">Global User</span>
+                        </div>
+                        <div class="mt-2">{{ notice.message|linebreaks }}</div>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="alert alert-info">No active notices right now.</div>
+{% endif %}
+{% endblock %}

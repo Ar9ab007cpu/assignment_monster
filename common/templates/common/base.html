@@ -1,0 +1,699 @@
+{% load static common_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block page_title %}Assignment Monster{% endblock %}</title>
+    <!-- Tailwind for utility tweaks; Bootstrap for layout -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for sidebar icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{% static 'css/base.css' %}">
+    <link rel="stylesheet" href="{% static 'css/theme-default.css' %}">
+    <link rel="icon" href="{% static 'img/assignment-monster-logo.svg' %}" type="image/svg+xml">
+      {% if user.is_authenticated %}
+          {% if user.role == user.Role.MARKETING or user.role == user.Role.FLOOR %}
+            <link rel="stylesheet" href="{% static 'css/theme-marketing.css' %}">
+          {% elif user.role == user.Role.SUPER_ADMIN or user.role == user.Role.CO_SUPER_ADMIN %}
+              <link rel="stylesheet" href="{% static 'css/theme-superadmin.css' %}">
+          {% else %}
+            <link rel="stylesheet" href="{% static 'css/theme-default.css' %}">
+        {% endif %}
+    {% endif %}
+    <link rel="stylesheet" href="{% static 'css/pro-theme.css' %}">
+    {% block extra_css %}{% endblock %}
+    <style>
+        /* Global loading overlay (spinner + label) */
+        #globalLoadingOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        #globalLoadingOverlay .loader-box {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 6px solid rgba(255, 255, 255, 0.14);
+            border-top-color: #70b6ff;
+            animation: spin 0.9s linear infinite;
+            box-shadow: 0 14px 34px rgba(0,0,0,0.3);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        #globalLoadingOverlay.overlay-global .loader-box {
+            border-top-color: #4fa3ff;
+            border: 6px solid rgba(90, 144, 255, 0.35);
+            box-shadow: 0 14px 34px rgba(64, 117, 200, 0.4);
+        }
+        #globalLoadingOverlay .loader-text {
+            margin-top: 14px;
+            color: #e5e7eb;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            text-shadow: 0 0 10px rgba(0,0,0,0.35);
+        }
+        #globalLoadingOverlay.overlay-global .loader-text {
+            color: #e5f0ff;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .site-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1200;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.15);
+            backdrop-filter: blur(4px);
+        }
+        body.loading > *:not(#globalLoadingOverlay) {
+            filter: blur(3px);
+            pointer-events: none;
+            user-select: none;
+        }
+body.loading #globalLoadingOverlay { display: flex; }
+        .site-brand {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            letter-spacing: 0.6px;
+            padding: 0.35rem 0.85rem 0.35rem 0.4rem;
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(15,23,42,0.85), rgba(124,58,237,0.45));
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 6px 14px rgba(15,23,42,0.45), inset 0 0 10px rgba(255,255,255,0.08);
+        }
+        .site-brand__icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 64px;
+            height: 64px;
+            border-radius: 32px;
+            background: rgba(255,255,255,0.08);
+            padding: 0.4rem;
+        }
+        .site-brand__icon img {
+            width: 100%;
+            height: auto;
+            filter: drop-shadow(0 8px 16px rgba(15,23,42,0.45));
+        }
+        .site-brand__text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            line-height: 1;
+        }
+        .global-mini-footer {
+            border-top: 1px solid rgba(255,255,255,0.08);
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(6px);
+            color: #cbd5e1;
+            font-size: 0.82rem;
+        }
+        .site-brand__title {
+            font-size: 1.05rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .site-brand__subtitle {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.8);
+            letter-spacing: 6px;
+        }
+        .gems-pill {
+            background: linear-gradient(135deg, #ff5f6d, #d73a4a);
+            color: #fff;
+            font-weight: 600;
+            padding: 0.25rem 0.95rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            box-shadow: 0 10px 22px rgba(215, 58, 74, 0.4);
+        }
+        .gems-pill-icon {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.18);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.35);
+            color: #ffe8ef;
+        }
+        .gems-pill-text {
+            letter-spacing: 0.2px;
+        }
+        .gems-icon-svg {
+            width: 16px;
+            height: 16px;
+        }
+        .gems-nav-icon {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(215, 58, 74, 0.15);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.4rem;
+            color: #d73a4a;
+            box-shadow: inset 0 0 6px rgba(215, 58, 74, 0.2);
+        }
+        .gems-nav-icon .gems-icon-svg {
+            width: 14px;
+            height: 14px;
+        }
+        .sidebar-shell .list-group-item.active,
+        .sidebar-shell .list-group-item.active:hover {
+            background: linear-gradient(135deg, #e11d48, #be123c);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 8px 20px rgba(225, 29, 72, 0.35);
+        }
+        body.theme-marketing .sidebar-shell .list-group-item.active,
+        body.theme-marketing .sidebar-shell .list-group-item.active:hover {
+            background: linear-gradient(135deg, #22c55e, #15803d);
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.35);
+        }
+        body.theme-superadmin .sidebar-shell .list-group-item.active,
+        body.theme-superadmin .sidebar-shell .list-group-item.active:hover {
+            background: linear-gradient(135deg, #9333ea, #6d28d9);
+            box-shadow: 0 8px 20px rgba(147, 51, 234, 0.35);
+        }
+        body.theme-global .sidebar-shell .list-group-item.active,
+        body.theme-global .sidebar-shell .list-group-item.active:hover {
+            background: linear-gradient(135deg, #fb7185, #ef4444);
+            box-shadow: 0 8px 20px rgba(244, 63, 94, 0.35);
+        }
+        .sidebar-shell .list-group-item.active i,
+        .sidebar-shell .list-group-item.active span,
+        .sidebar-shell .list-group-item.active small {
+            color: #fff !important;
+        }
+        .navbar .gems-nav-pill {
+            background: #141c2f;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 0.35rem 0.5rem 0.35rem 0.4rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            font-size: 0.9rem;
+            color: #f8fafc;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+        }
+        .navbar .gems-nav-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(234, 76, 137, 0.25);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .navbar .gems-nav-pill {
+            background: #141c2f;
+            border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.08);
+            padding: 0.35rem 0.5rem 0.35rem 0.4rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            font-size: 0.9rem;
+            color: #f8fafc;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.05);
+        }
+        .navbar .gems-nav-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(234, 76, 137, 0.25);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .navbar .gems-nav-label {
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .navbar .gems-nav-value {
+            background: #2563eb;
+            color: #fff !important;
+            border-radius: 12px;
+            padding: 0.15rem 0.65rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            min-width: 58px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.2);
+        }
+        .theme-toggle-btn,
+        .sidebar-toggle-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            border: 1px solid rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+        }
+        .theme-toggle-btn .fa-solid,
+        .sidebar-toggle-btn .fa-solid {
+            pointer-events: none;
+        }
+        .gems-nav-pill {
+            background: #101a2b;
+            border-radius: 18px;
+            border: 1px solid rgba(15, 23, 42, 0.8);
+            padding: 0.3rem 0.45rem 0.3rem 0.35rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            font-size: 0.9rem;
+            color: #f8fafc;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+        }
+        .gems-nav-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 10px;
+            background: rgba(234, 76, 137, 0.2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gems-nav-label {
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .gems-nav-value {
+            background: #2563eb;
+            color: #fff;
+            border-radius: 12px;
+            padding: 0.15rem 0.65rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.2);
+        }
+        .sidebar-col,
+        .content-col {
+            transition: all 0.35s ease;
+        }
+        .sidebar-col {
+            position: relative;
+        }
+        @media (min-width: 992px) {
+            body.sidebar-toggle-hidden .sidebar-col {
+                transform: translateX(-260px);
+                opacity: 0;
+                pointer-events: none;
+            }
+            body.sidebar-toggle-hidden .content-col {
+                flex: 0 0 100% !important;
+                max-width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light {% if user.is_authenticated %}{% if user.role == user.Role.MARKETING or user.role == user.Role.FLOOR %}theme-marketing{% elif user.role == user.Role.GLOBAL %}theme-global{% elif user.role == user.Role.SUPER_ADMIN or user.role == user.Role.CO_SUPER_ADMIN %}theme-superadmin{% else %}theme-default{% endif %}{% else %}theme-guest{% endif %}">
+    {% include "common/navbar.html" %}
+    {% if user.is_authenticated %}
+        {% active_notices user as notices %}
+        {% if notices %}
+            <div class="container-fluid px-3 mt-1">
+                {% for notice in notices %}
+                <div class="alert alert-warning alert-dismissible fade show mb-2 notice-banner" role="alert" data-notice-id="{{ notice.id }}">
+                    <strong>{{ notice.title }}</strong><br>
+                    {{ notice.message|linebreaks }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+            <div id="noticeDropdown" class="notice-dropdown card shadow-sm" style="display:none; position:fixed; top:60px; right:16px; z-index:1200; min-width:320px;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <strong>Notices</strong>
+                    <button type="button" class="btn-close btn-sm" aria-label="Close"></button>
+                </div>
+                <div class="list-group list-group-flush">
+                    {% for notice in notices %}
+                        <div class="list-group-item">
+                            <div class="fw-semibold">{{ notice.title }}</div>
+                            <div class="small text-muted">
+                                {% if notice.start_at %}From {{ notice.start_at|date:"d M Y, H:i" }}{% endif %}
+                                {% if notice.end_at %}<br>To {{ notice.end_at|date:"d M Y, H:i" }}{% endif %}
+                            </div>
+                            <div class="mt-1 small">{{ notice.message|linebreaksbr }}</div>
+                            {% if user.role == user.Role.SUPER_ADMIN or user.role == user.Role.CO_SUPER_ADMIN %}
+                            <button class="btn btn-sm btn-outline-danger mt-2 expire-notice-btn" data-notice-id="{{ notice.id }}">Expire</button>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endif %}
+    {% endif %}
+    <div class="container-fluid">
+        <div class="row">
+            {% if user.is_authenticated %}
+                <div class="col-12 col-lg-2 col-xl-2 mb-3 sidebar-col" style="margin-top: 0.4rem;">
+                    {# Show marketing sidebar for Marketing/Global (and any other authenticated non-admin roles) #}
+                    {% if user.role == user.Role.SUPER_ADMIN or user.role == user.Role.CO_SUPER_ADMIN %}
+                        {% include "common/sidebar_superadmin.html" %}
+                    {% else %}
+                        {% include "common/sidebar_marketing.html" %}
+                    {% endif %}
+                </div>
+                <div class="col-12 col-lg-10 col-xl-10 py-3 content-col">
+            {% else %}
+                <div class="col-12 py-3">
+            {% endif %}
+{% block content %}{% endblock %}
+                </div>
+        </div>
+    </div>
+
+
+    {% if messages %}
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+        {% for message in messages %}
+            <div class="toast align-items-center text-white {% if message.tags == 'error' or message.tags == 'danger' %}bg-danger{% else %}bg-success{% endif %} border-0 show mb-2" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body fw-semibold">
+                        {{ message }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <style>
+        /* Confirmation modal styling for both light/dark themes */
+        #globalConfirmModal .modal-content {
+            background-color: #0b1220;
+            color: #e5e7eb;
+            border: 1px solid #334155;
+        }
+        #globalConfirmModal .modal-header,
+        #globalConfirmModal .modal-footer {
+            border-color: #334155;
+        }
+        #globalConfirmModal .modal-title,
+        #globalConfirmModal .confirm-message {
+            color: #e5e7eb;
+        }
+        #globalConfirmModal .btn-close {
+            filter: invert(1);
+        }
+    </style>
+    <!-- Global confirmation modal -->
+    <div class="modal fade" id="globalConfirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" id="globalConfirmContent">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="globalConfirmTitle">Please Confirm</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0 confirm-message">Are you sure you want to proceed?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="globalConfirmProceed">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            if (typeof bootstrap === "undefined") return;
+            const modalEl = document.getElementById("globalConfirmModal");
+            if (!modalEl) return;
+            const proceedBtn = document.getElementById("globalConfirmProceed");
+            const messageEl = modalEl.querySelector(".confirm-message");
+            const modal = new bootstrap.Modal(modalEl);
+            let pendingAction = null;
+
+            const showConfirm = (message, onProceed) => {
+                messageEl.textContent = message || "Are you sure you want to proceed?";
+                pendingAction = onProceed;
+                modal.show();
+            };
+
+            proceedBtn.addEventListener("click", () => {
+                modal.hide();
+                if (typeof pendingAction === "function") {
+                    const action = pendingAction;
+                    pendingAction = null;
+                    action();
+                }
+            });
+
+            // Confirm all POST form submissions unless explicitly skipped
+            const requestOverlay = (form) => {
+                document.dispatchEvent(
+                    new CustomEvent("generation:maybe_overlay", { detail: { form } })
+                );
+            };
+
+            document.addEventListener("submit", (event) => {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement)) return;
+                const method = (form.getAttribute("method") || "GET").toUpperCase();
+                if (method !== "POST") return;
+                const needsLoading = form.dataset.loading === "true" || form.classList.contains("generation-form");
+                const requiresConfirm = form.dataset.skipConfirm !== "true";
+                if (requiresConfirm && form.dataset.confirmed !== "true") {
+                    event.preventDefault();
+                    const msg = form.dataset.confirm || "Please confirm before submitting.";
+                    showConfirm(msg, () => {
+                        form.dataset.confirmed = "true";
+                        if (needsLoading) {
+                            document.body.classList.add("loading");
+                        }
+                        requestOverlay(form);
+                        form.submit();
+                    });
+                    return;
+                }
+                if (needsLoading) {
+                    document.body.classList.add("loading");
+                }
+                requestOverlay(form);
+            }, true);
+
+            // Confirm destructive links/buttons (danger variants)
+            document.addEventListener("click", (event) => {
+                const target = event.target;
+                if (!(target instanceof HTMLElement)) return;
+                // Ignore submit buttons (handled by form listener)
+                if (target.tagName === "BUTTON" && target.type === "submit") return;
+                const isDanger =
+                    target.classList.contains("btn-danger") ||
+                    target.classList.contains("btn-outline-danger");
+                if (!isDanger) return;
+                const href = target.getAttribute("href");
+                const msg = target.dataset.confirm || "This action may be sensitive. Proceed?";
+                if (href) {
+                    event.preventDefault();
+                    showConfirm(msg, () => {
+                        window.location.href = href;
+                    });
+                }
+            });
+        })();
+    </script>
+    <script>
+        (function() {
+            const body = document.body;
+            const stored = localStorage.getItem("theme");
+            if (stored === "dark") {
+                body.classList.add("theme-dark");
+            }
+            const toggle = document.getElementById("themeToggleBtn");
+            const updateIcon = () => {
+                if (!toggle) return;
+                const icon = toggle.querySelector("i");
+                if (!icon) return;
+                icon.className = body.classList.contains("theme-dark")
+                    ? "fa-solid fa-sun"
+                    : "fa-solid fa-moon";
+            };
+            if (toggle) {
+                toggle.addEventListener("click", () => {
+                    const isDark = body.classList.toggle("theme-dark");
+                    localStorage.setItem("theme", isDark ? "dark" : "light");
+                    updateIcon();
+                });
+                updateIcon();
+            }
+        })();
+    </script>
+    <script>
+        (function() {
+            const btn = document.getElementById("sidebarToggleBtn");
+            if (!btn) return;
+            const body = document.body;
+            const updateIcon = () => {
+                const icon = btn.querySelector("i");
+                if (!icon) return;
+                icon.className = body.classList.contains("sidebar-toggle-hidden")
+                    ? "fa-solid fa-angles-right"
+                    : "fa-solid fa-angles-left";
+            };
+            btn.addEventListener("click", () => {
+                body.classList.toggle("sidebar-toggle-hidden");
+                updateIcon();
+            });
+            updateIcon();
+        })();
+    </script>
+    <script>
+        function dismissNotice(id) {
+            fetch("{% url 'common:dismiss_notice' %}", {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                },
+                body: new URLSearchParams({ notice_id: id })
+            }).catch(() => {});
+        }
+    </script>
+    <script>
+        (function () {
+            const banners = document.querySelectorAll(".notice-banner");
+            if (!banners.length) return;
+            const loginKey = "{{ user.last_login|date:'U'|default:'anon' }}";
+            banners.forEach((banner) => {
+                const id = banner.dataset.noticeId;
+                const storageKey = `notice_dismissed_${id}_${loginKey}`;
+                const closeBtn = banner.querySelector(".btn-close");
+                if (localStorage.getItem(storageKey) === "1") {
+                    banner.remove();
+                    return;
+                }
+                closeBtn?.addEventListener("click", () => {
+                    localStorage.setItem(storageKey, "1");
+                });
+            });
+        })();
+        (function () {
+            const toggle = document.getElementById("noticeToggleBtn");
+            const dropdown = document.getElementById("noticeDropdown");
+            if (!toggle || !dropdown) return;
+            const closeBtn = dropdown.querySelector(".btn-close");
+            const hide = () => dropdown.style.display = "none";
+            const show = () => dropdown.style.display = "block";
+            toggle.addEventListener("click", () => {
+                dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
+            });
+            closeBtn?.addEventListener("click", hide);
+            document.addEventListener("click", (e) => {
+                if (dropdown.style.display !== "block") return;
+                if (!dropdown.contains(e.target) && e.target !== toggle) hide();
+            });
+            const expireButtons = dropdown.querySelectorAll(".expire-notice-btn");
+            expireButtons.forEach((btn) => {
+                btn.addEventListener("click", () => {
+                    const id = btn.dataset.noticeId;
+                    if (!id) return;
+                    fetch("{% url 'superadmin:notice_management' %}", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": "{{ csrf_token }}",
+                            "Content-Type": "application/x-www-form-urlencoded",
+                        },
+                        body: new URLSearchParams({ action: "expire", notice_id: id })
+                    }).then(() => window.location.reload()).catch(() => window.location.reload());
+                });
+            });
+        })();
+    </script>
+    {% block extra_js %}{% endblock %}
+    
+    <div id="globalLoadingOverlay" aria-hidden="true" class="{% if user.is_authenticated and user.role == user.Role.GLOBAL %}overlay-global{% endif %}">
+        <div class="d-flex flex-column align-items-center">
+            <div class="loader-box"></div>
+            <div class="loader-text">Processing...</div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            const overlay = document.getElementById("globalLoadingOverlay");
+            if (!overlay) return;
+
+            const showOverlay = () => document.body.classList.add("loading");
+            const hideOverlay = () => document.body.classList.remove("loading");
+
+            const shouldShowForForm = (form) => {
+                if (!(form instanceof HTMLFormElement)) return false;
+                const isPost = (form.getAttribute("method") || "GET").toUpperCase() === "POST";
+                const wantsOverlay = form.classList.contains("generation-form") || form.dataset.loading === "true";
+                const isConfirmed = form.dataset.confirmed === "true" || form.dataset.skipConfirm === "true";
+                return isPost && wantsOverlay && isConfirmed;
+            };
+
+            document.addEventListener("submit", function (e) {
+                const form = e.target;
+                if (shouldShowForForm(form)) {
+                    showOverlay();
+                }
+            }, true);
+
+            document.addEventListener("form:confirmed", function (e) {
+                const form = e.detail && e.detail.form;
+                if (shouldShowForForm(form)) {
+                    showOverlay();
+                }
+            });
+
+            document.addEventListener("generation:maybe_overlay", function (e) {
+                const form = e.detail && e.detail.form;
+                if (shouldShowForForm(form)) {
+                    showOverlay();
+                }
+            });
+
+            // Handle programmatic form.submit() after confirmation
+            const nativeSubmit = HTMLFormElement.prototype.submit;
+            HTMLFormElement.prototype.submit = function () {
+                try {
+                    if (shouldShowForForm(this)) {
+                        showOverlay();
+                    }
+                } catch (e) {
+                    // no-op
+                }
+                return nativeSubmit.call(this);
+            };
+
+            window.addEventListener("pageshow", hideOverlay);
+        })();
+    </script>
+</body>
+</html>
+
+
+
+
+
+

@@ -1,0 +1,128 @@
+{% extends "common/base.html" %}
+{% load common_tags %}
+
+{% block page_title %}Attachment Audit{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h2 class="mb-1">Attachment Audit</h2>
+        <p class="text-muted mb-0">View stored files and delete rows if needed.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <div class="card shadow-sm">
+            <div class="card-body py-2 px-3 text-center">
+                <div class="text-muted small text-uppercase">Total Files</div>
+                <div class="h5 mb-0">{{ total_files }}</div>
+            </div>
+        </div>
+        <div class="card shadow-sm">
+            <div class="card-body py-2 px-3 text-center">
+                <div class="text-muted small text-uppercase">Total Size</div>
+                <div class="h5 mb-0 size-summary" data-bytes="{{ total_size }}">Loading…</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card shadow-sm">
+    <div class="card-body table-responsive">
+        <div class="d-flex justify-content-end align-items-center mb-2">
+            <label class="me-2 small mb-0">Size unit:</label>
+            <select id="sizeUnitSelect" class="form-select form-select-sm" style="width: 140px;">
+                <option value="bytes" selected>Bytes</option>
+                <option value="kb">KB</option>
+                <option value="mb">MB</option>
+                <option value="gb">GB</option>
+                <option value="tb">TB</option>
+            </select>
+        </div>
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>SL No.</th>
+                    <th>File</th>
+                    <th>Job</th>
+                    <th>Uploader</th>
+                    <th>Browser</th>
+                    <th>Uploaded</th>
+                    <th>Size</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if attachments_page %}
+                    {% for att in attachments_page %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><a href="{{ att.file.url }}" target="_blank">{{ att.file.name|default:"(missing)" }}</a></td>
+                        <td>{{ att.job.system_id }} / {{ att.job.job_id_customer }}</td>
+                        <td>{{ att.job.created_by.get_full_name|default:att.job.created_by.email }}</td>
+                        <td>{{ att.user_agent|browser_name }}</td>
+                        <td>{{ att.uploaded_at|date:"d M Y, h:i A" }}</td>
+                        <td><span class="file-size" data-bytes="{{ att.file.size|default:0 }}">{{ att.file.size }} bytes</span></td>
+                        <td>
+                            <form method="post" data-loading="true" data-confirm="Delete this attachment?" class="d-inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="attachment_id" value="{{ att.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr><td colspan="8" class="text-center text-muted">No attachments found.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+        {% if attachments_paginator and attachments_paginator.num_pages > 1 %}
+        <nav class="mt-2">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {% if not attachments_page.has_previous %}disabled{% endif %}">
+                    <a class="page-link" href="{% if attachments_page.has_previous %}?page={{ attachments_page.previous_page_number }}{% else %}#{% endif %}">Previous</a>
+                </li>
+                {% for num in attachments_paginator.page_range %}
+                    <li class="page-item {% if attachments_page.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endfor %}
+                <li class="page-item {% if not attachments_page.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{% if attachments_page.has_next %}?page={{ attachments_page.next_page_number }}{% else %}#{% endif %}">Next</a>
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+<script>
+(function() {
+    const unitSelect = document.getElementById("sizeUnitSelect");
+    const rows = document.querySelectorAll(".file-size");
+    const summary = document.querySelector(".size-summary");
+    const totalBytes = summary ? parseFloat(summary.getAttribute("data-bytes") || "0") : 0;
+
+    function format(bytes, unit) {
+        const val = parseFloat(bytes);
+        if (unit === "kb") return (val / 1024).toFixed(2) + " KB";
+        if (unit === "mb") return (val / 1024 / 1024).toFixed(2) + " MB";
+        if (unit === "gb") return (val / 1024 / 1024 / 1024).toFixed(2) + " GB";
+        if (unit === "tb") return (val / 1024 / 1024 / 1024 / 1024).toFixed(2) + " TB";
+        return val + " bytes";
+    }
+
+    function updateSizes() {
+        const unit = unitSelect.value;
+        rows.forEach(el => {
+            const bytes = el.getAttribute("data-bytes") || "0";
+            el.textContent = format(bytes, unit);
+        });
+        if (summary) {
+            summary.textContent = format(totalBytes, unit);
+        }
+    }
+    if (unitSelect && rows.length) {
+        unitSelect.addEventListener("change", updateSizes);
+        updateSizes();
+    }
+})();
+</script>
+{% endblock %}
